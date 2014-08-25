@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<!--
+    License TODO
+-->
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<meta name="format-detection" content="telephone=no" />
+		<!-- WARNING: for iOS 7, remove the width=device-width and height=device-height attributes. See https://issues.apache.org/jira/browse/CB-4323 -->
+		<meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height, target-densitydpi=medium-dpi" />
+		<link rel="stylesheet" type="text/css" href="css/index.css" />
+		<title>ChiTra</title>
+	</head>
+	<body>
+		<table>
+			<tr height="35%">
+				<td colspan="2" rowspan="2" class="content_hanzi">
+					<p id="text_hanzi">你们好！</p>
+				</td>
+				<td colspan="2" class="content_pinyin">
+					<p id="text_pinyin">nǐmen hǎo!</p>
+				</td>
+			</tr>
+			<tr height="15%">
+				<td colspan="2" class="content_comment">
+					<p id="text_comment">Redewendung</p>
+					<button id="settings_b" type="button" class="button_std" value="Settings" onclick="window.open('settings.html', '_self')"
+						style="background-image:url('img/gear.png')"/>
+					<button id="info_b" type="button" class="button_std" value="Info" onclick="window.open('info.html', '_self')"
+						style="background-image:url('img/info.png')"/>
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<button id="fav_b" type="button" class="button_std" value="Favorite" onclick="app.toggleFav()"
+						style="background-image:url('img/star_nofav.png')"/>
+				</td>
+				<td colspan="2" rowspan="2" class="content_translation">
+					<p id="text_translation">Hallo ihr!</p>
+				</td>
+				<td>
+					<button id="show_b" type="button" class="button_std" value="Show" onclick="app.show()"
+						style="background-image:url('img/eye.png')"/>
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<button id="audio_b" type="button" class="button_std" value="Audio" onclick="app.playAudio()"
+						style="background-image:url('img/speaker.png')"/>
+				</td>
+				<td>
+					<button id="next_b" type="button" class="button_std" value="Next" onclick="app.reloadData()"
+						style="background-image:url('img/rarrow.png')"/>
+				</td>
+			</tr>
+		</table>
+
+		<script type="text/javascript" src="cordova.js"></script>
+		<script type="text/javascript" src="js/index.js"></script>
+		<script type="text/javascript">
+			app.initialize();
+		</script>
+    </body>
+</html>

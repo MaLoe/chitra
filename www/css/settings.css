@@ -1,0 +1,45 @@
+/*
+ * License TODO
+ * */
+
+html, body {
+	height:100%;
+}
+
+body {
+	-webkit-touch-callout: none;                /* prevent callout to copy image, etc when tap to hold */
+	-webkit-text-size-adjust: none;             /* prevent webkit from resizing text to fit */
+	-webkit-user-select: none;                  /* prevent copy paste, to allow, change 'none' to 'text' */
+
+    background-color:#DDDDDD;
+	font-size:12px;
+	margin:0px;
+	padding:0px;
+	height:100%;
+	width:100%;
+	//position:absolute;             /* position in the center of the screen */
+}
+
+table {
+	width:100%;
+	//left:0;
+	//right:100%;
+	//top:0;
+	//bottom:100%;
+	text-align:left; 
+	vertical-align:middle;
+	padding:1%;
+}
+
+input[type='checkbox'] {
+    -webkit-appearance:none;
+    width:20px;
+    height:20px;
+    background:white;
+    border-radius:5px;
+    border:2px solid #555;
+}
+
+input[type='checkbox']:checked {
+    background: #200;
+}
