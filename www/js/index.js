@@ -7,13 +7,12 @@
 
 var CONST_FAV_PROBABILITY = 0.25;
 var standard_files = [
-	//{ url : "data/ger_example.xml", checked : true },
-	{ url : "data/ger_radicals_1.xml", checked : true },
-	{ url : "data/ger_radicals_2.xml", checked : true },
-	{ url : "data/ger_radicals_3.xml", checked : true },
-	{ url : "data/ger_radicals_4.xml", checked : true },
-	{ url : "data/ger_radicals_5.xml", checked : true },
-	{ url : "data/ger_numbers.xml", checked : true }
+	//{ url : "data/ger_radicals_1.xml", checked : true },
+	//{ url : "data/ger_radicals_2.xml", checked : true },
+	//{ url : "data/ger_radicals_3.xml", checked : true },
+	//{ url : "data/ger_radicals_4.xml", checked : true },
+	//{ url : "data/ger_radicals_5.xml", checked : true },
+	{ url : "data/en.xml", checked : true }
 ]
 
 var app = {
