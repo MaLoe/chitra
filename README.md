@@ -4,4 +4,4 @@ chitra
 Chinese Vocabulary Trainer
 
 Phonegap Build Project:
-http://build.phonegap.com/apps/1062649
+https://build.phonegap.com/apps/1062694/
