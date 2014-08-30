@@ -12,7 +12,7 @@ var standard_files = [
 	//{ url : "data/ger_radicals_3.xml", checked : true },
 	//{ url : "data/ger_radicals_4.xml", checked : true },
 	//{ url : "data/ger_radicals_5.xml", checked : true },
-	{ url : "data/en.xml", checked : true }
+	{ url : "data/en_numbers.xml", checked : true }
 ]
 
 var app = {
