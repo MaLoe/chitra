@@ -27,6 +27,7 @@ function toggleFav () {
 }
 
 function show () {
+	vtrainer.show();
 	// show current element
 	document.getElementById("text_vocable").style.visibility = "visible";
 	document.getElementById("text_pronunciation").style.visibility = "visible";

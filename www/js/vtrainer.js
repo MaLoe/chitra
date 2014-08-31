@@ -111,6 +111,7 @@ var vtrainer = {
 				translation : xmlEntries[j].getElementsByTagName("translation")[0].childNodes[0].nodeValue,
 				comment     : temp_comment,
 				occurance 	: 0,
+				shown       : 0,
 				favorite 	: false
 			}
 			this.aData.push(element);
@@ -200,7 +201,7 @@ var vtrainer = {
 				// (try to get the one with lowest # of occs)
 				for (i = 0; i < occSteps; i++) {
 					var randomIndex = Math.floor(Math.random() * this.aData.length);
-					if (!tempElement || tempElement.occurance > this.aData[randomIndex].occurance)
+					if (!tempElement || (tempElement.occurance-tempElement.shown) > (this.aData[randomIndex].occurance-this.aData[randomIndex].shown))
 						tempElement = this.aData[randomIndex];
 				}
 			}
@@ -210,6 +211,10 @@ var vtrainer = {
 		this.oCurrentHanzi = tempElement;
 
 		tempElement.occurance++;
+	},
+
+	show: function() {
+		this.oCurrentHanzi.shown++;
 	},
 
 	// ███████████████ helper functions ███████████████████████████████████████████████████████████████████
