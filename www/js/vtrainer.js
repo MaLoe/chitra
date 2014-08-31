@@ -106,13 +106,13 @@ var vtrainer = {
 			else
 				var temp_comment = xmlElementComment[0].childNodes[0].nodeValue;
 			var element = {
-				hanzi       : xmlEntries[j].getElementsByTagName("hanzi")[0].childNodes[0].nodeValue,
-				pinyin      : xmlEntries[j].getElementsByTagName("pinyin")[0].childNodes[0].nodeValue,
-				translation : xmlEntries[j].getElementsByTagName("translation")[0].childNodes[0].nodeValue,
-				comment     : temp_comment,
-				occurance 	: 0,
-				shown       : 0,
-				favorite 	: false
+				vocable       : xmlEntries[j].getElementsByTagName("hanzi")[0].childNodes[0].nodeValue,
+				pronunciation : xmlEntries[j].getElementsByTagName("pinyin")[0].childNodes[0].nodeValue,
+				translation   : xmlEntries[j].getElementsByTagName("translation")[0].childNodes[0].nodeValue,
+				comment       : temp_comment,
+				occurrences   : 0,
+				shown         : 0,
+				favorite 	  : false
 			}
 			this.aData.push(element);
 		}
@@ -193,7 +193,7 @@ var vtrainer = {
 				// get a random favorite
 				var randomIndex = Math.floor(Math.random() * favsArray.length);
 				var i = 0;
-				while (this.aData[i].hanzi != favsArray[randomIndex])
+				while (this.aData[i].vocable != favsArray[randomIndex])
 					i++;
 				tempElement = this.aData[i];
 			} else {
@@ -201,16 +201,16 @@ var vtrainer = {
 				// (try to get the one with lowest # of occs)
 				for (i = 0; i < occSteps; i++) {
 					var randomIndex = Math.floor(Math.random() * this.aData.length);
-					if (!tempElement || (tempElement.occurance-tempElement.shown) > (this.aData[randomIndex].occurance-this.aData[randomIndex].shown))
+					if (!tempElement || (tempElement.occurrences-tempElement.shown) > (this.aData[randomIndex].occurrences-this.aData[randomIndex].shown))
 						tempElement = this.aData[randomIndex];
 				}
 			}
 			// now test if it's the same element as the current displayed
 			currentStep++;
-		} while (this.oCurrentHanzi.hanzi == tempElement.hanzi && currentStep < maxSteps)
+		} while (this.oCurrentHanzi.vocable == tempElement.vocable && currentStep < maxSteps)
 		this.oCurrentHanzi = tempElement;
 
-		tempElement.occurance++;
+		tempElement.occurrences++;
 	},
 
 	show: function() {
@@ -221,7 +221,7 @@ var vtrainer = {
 
 	// getters
 	getCurrentPronunciation: function() {
-		return this.oCurrentHanzi.pinyin;
+		return this.oCurrentHanzi.pronunciation;
 	},
 	getCurrentTranslation: function() {
 		return this.oCurrentHanzi.translation;
@@ -230,7 +230,10 @@ var vtrainer = {
 		return this.oCurrentHanzi.comment;
 	},
 	getCurrentVocable: function() {
-		return this.oCurrentHanzi.hanzi;
+		return this.oCurrentHanzi.vocable;
+	},
+	getLoadedVocables: function() {
+		return this.aData;
 	},
 	isFavorite: function(vocable) {
 		return (vocable in this.oFavs)
@@ -238,7 +241,7 @@ var vtrainer = {
 
 	// TTS for current element
 	playAudio: function() {
-		var hanzi = this.oCurrentHanzi.hanzi;
+		var hanzi = this.oCurrentHanzi.vocable;
 		if (!this.aAudioBuffer[hanzi]) {
 			// load the audio
 			console.log("loading audio...");
