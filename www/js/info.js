@@ -13,14 +13,15 @@ function onDeviceReady () {
 	// Initialize vocable trainer
 	vtrainer.initialize();
 	// Display the loaded vocabulary
-	displayLoadedVocabulary();
+	displayLoadedVocabulary("t_loaded_elements");
+	displaySettings("t_current_settings");
 }
 
 // Display the loaded vocabulary
-function displayLoadedVocabulary () {
+function displayLoadedVocabulary (id) {
 	var aData = vtrainer.getLoadedVocables();
 	// Get the table and add a list of loaded vocables
-	var tableref = document.getElementById("t_loaded_elements");
+	var tableref = document.getElementById(id);
 	var tbdy = document.createElement("tbody");
     for (i = 0; i < aData.length; i++) {
 		var tr = document.createElement("tr");
@@ -57,6 +58,27 @@ function displayLoadedVocabulary () {
 		// Append new row
 		tbdy.appendChild(tr);
     }
+	tableref.appendChild(tbdy);
+}
+
+function displaySettings (id) {
+	var taleref = document.getElementById(id);
+	var files = localStorage.getItem("files");
+
+	var tableref = document.getElementById(id);
+	var tbdy = document.createElement("tbody");
+	var tr = document.createElement("tr");
+
+	var td_s_key = document.createElement("td");
+	var td_s_val = document.createElement("td");
+
+	td_s_key.appendChild(document.createTextNode("files"));
+	td_s_val.appendChild(document.createTextNode(files));
+
+	tr.appendChild(td_s_key);
+	tr.appendChild(td_s_val);
+
+	tbdy.appendChild(tr);
 	tableref.appendChild(tbdy);
 }
 
