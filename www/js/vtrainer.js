@@ -149,7 +149,7 @@ var vtrainer = {
 		xmlhttp.send("");
 		// TODO test if file is present
 		// TODO event based loading?
-		if (xmlhttp.status != 200) {
+		if (xmlhttp.status != 200 && xmlhttp.status != 0) {
 			console.log("███ couldn't open file: " + file + " - XMLHttpRequest.status=" + xmlhttp.status);
 			return false;
 		}
