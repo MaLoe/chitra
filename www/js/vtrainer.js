@@ -74,7 +74,7 @@ var vtrainer = {
 					this.loadDataFromInternal(aFiles[i].url);
 				// check if it's in local filesystem
 				} else if (url.match(/^file:/)) {
-					this.loadDataFromLocalFS(aFiles[i].url, on);
+					this.loadDataFromLocalFS(aFiles[i].url);
 				// check if it's in the webz
 				} else if (url.match(/^http:/)) {
 					console.log("███ TODO web loading");
@@ -126,12 +126,12 @@ var vtrainer = {
 					// got xml as string, parse it
 					var parser = new DOMParser();
 					var xmlDoc = parser.parseFromString(evt.target.result, "text/xml");
-					this.loadXML(xmlDoc);
+					vtrainer.loadXML(xmlDoc);
 					// done loading, signal it
-					this.signalDoneLoading();
+					vtrainer.signalDoneLoading();
 				};
 				freader.readAsText(file);
-			}, this.onFail);
+			}, vtrainer.onFail);
 		}, this.onFail);
 	},
 
