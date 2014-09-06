@@ -145,11 +145,9 @@ var vtrainer = {
 		// load DOM
 		var xmlhttp = new XMLHttpRequest();
 		xmlhttp.open("GET", file, false);
-		xmlhttp.setRequestHeader("Content-Type", "text/xml");
-		xmlhttp.send("");
-		// TODO test if file is present
-		// TODO event based loading?
-		if (xmlhttp.status != 200 && xmlhttp.status != 0) {
+		xmlhttp.setRequestHeader("Accept", "application/xml");
+		xmlhttp.send(null);
+		if (xmlhttp.status != 200) {
 			console.log("███ couldn't open file: " + file + " - XMLHttpRequest.status=" + xmlhttp.status);
 			return false;
 		}
@@ -246,29 +244,30 @@ var vtrainer = {
 			// load the audio
 			console.log("loading audio...");
 			var url = this.sAudioURL + hanzi;
-			//var audio = new Audio(url);
 
-			//audio.load(); // TODO: doesn't seem to store the audio in memory
-			//this.aAudioBuffer[hanzi] = audio;
-
-			this.downloadFile(url, "sdcard/chinese_vocabulary/audio/" + hanzi + ".mp3");
-			audio = new Media("chinese_vocabulary/audio/" + hanzi + ".mp3");
-			this.aAudioBuffer[hanzi] = audio;
+			this.downloadFile(url, "sdcard/chinese_vocabulary/audio/" + hanzi + ".mp3", function (url, out) {
+				// audio loaded, cache and play it
+				audio = new Media("chinese_vocabulary/audio/" + hanzi + ".mp3");
+				this.aAudioBuffer[hanzi] = audio;
+				audio.play();
+			});
+		} else {
+			// play the audio
+			this.aAudioBuffer[hanzi].play();
 		}
-		// play the audio
-		this.aAudioBuffer[hanzi].play();
 	},
 	// download the file from url to outPath
-	downloadFile: function(url, outPath) {
+	downloadFile: function(url, outPath, onSuccess) {
 		var fileTransfer = new FileTransfer();
 
 		fileTransfer.download(
 			url,
 			outPath,
 			function(entry) {
-				console.log("download complete: " + entry.fullPath);
+				console.log("███ download complete: " + entry.fullPath);
+				onSuccess(url, outPath);
 			},
-			onFail(error),
+			this.onFail,
 			false
 		);
 	},
