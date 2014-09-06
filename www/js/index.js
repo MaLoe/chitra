@@ -11,7 +11,9 @@ function initialize () {
 function onDeviceReady () {
 	document.addEventListener("menubutton", onMenuKeyDown, false);
 	// Initialize vocable trainer
-	vtrainer.initialize();
+	vtrainer.initialize(function () {
+		// TODO activate next button
+	});
 }
 
 function toggleFav () {

@@ -11,10 +11,11 @@ function initialize () {
 function onDeviceReady () {
 	document.addEventListener("menubutton", onMenuKeyDown, false);
 	// Initialize vocable trainer
-	vtrainer.initialize();
-	// Display the loaded vocabulary
-	displayLoadedVocabulary("t_loaded_elements");
-	displaySettings("t_current_settings");
+	vtrainer.initialize(function () {
+		// Display the loaded vocabulary
+		displayLoadedVocabulary("t_loaded_elements");
+		displaySettings("t_current_settings");
+	});
 }
 
 // Display the loaded vocabulary

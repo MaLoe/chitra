@@ -19,12 +19,14 @@ var vtrainer = {
 	aData: [],         // runtime storage of hanzi and their data
 	aAudioBuffer: [],
 	sAudioURL: "",
+	bDoneSettingUpLoaders: false,
 	nToLoadFiles: 0,   // XML loading is based on events, so we can easily end up with some parallel functions waiting for FS while our program is allready at the point where it could try to get the next element. We have to wait until all loaders finish.
 	// TODO minNextSteps / occsteps -> settings
 	// TODO maxNextSteps -> settings
 
     // Application Constructor
-    initialize: function() {
+    initialize: function(onSuccess) {
+		this.onSuccess = onSuccess;
 		// load data
 		/*if (localStorage != null) {
 			this.aData = JSON.parse(localStorage.getItem("data"));
@@ -47,27 +49,20 @@ var vtrainer = {
 	},
 	signalDoneLoading: function() {
 		this.nToLoadFiles--;
-		if (this.nToLoadFiles <= 0) {
-			console.log("███ finished loading data");
+		if (this.nToLoadFiles <= 0 && this.bDoneSettingUpLoaders) {
 			// save to local storage
 			// TODO
 			localStorage.setItem("data", JSON.stringify(this.aData));
 
-			// TODO display something when nothing was loaded
-			// reset/load favorites
-			//this.oFavs = new Object();
-			this.oCurrentHanzi = this.aData[Math.floor(Math.random() * this.aData.length)];
-			// set next_b to next() instead of reloaddata()
-			//Event.observe("next_b", "click", this.next);
-			//$('next_b').observe('click', this.next);
-			// TODO next should only display next element and reload is taken care of by initialize
-			this.next();
+			console.log("███ finished loading data");
+			this.onSuccess();
 		}
 	},
 	// Reload Data 
 	//
 	// reload all data, favorites etc.
 	reloadData: function() {
+		this.bDoneSettingUpLoaders = false;
 		console.log("███ loading data");
 		var aFiles = JSON.parse(localStorage.getItem("files"));
 		// start up loaders for every checked file
@@ -79,7 +74,7 @@ var vtrainer = {
 					this.loadDataFromInternal(aFiles[i].url);
 				// check if it's in local filesystem
 				} else if (url.match(/^file:/)) {
-					this.loadDataFromLocalFS(aFiles[i].url);
+					this.loadDataFromLocalFS(aFiles[i].url, on);
 				// check if it's in the webz
 				} else if (url.match(/^http:/)) {
 					console.log("███ TODO web loading");
@@ -89,8 +84,9 @@ var vtrainer = {
 				}
 			}
 		}
-		// we can only continue here if all files got loaded
-		// that's why here is no code, look at signalDoneLoading()
+		// Done setting up loaders: if all async loaders are finished, someone calls onSuccess
+		this.bDoneSettingUpLoaders = true;
+		this.signalDoneLoading(); // just in case something was really fast and bDoneSettingUpLoaders was false
 	},
 	// Load XML
 	//
@@ -144,17 +140,19 @@ var vtrainer = {
 		console.log("███ loading file: " + file);
 		// load DOM
 		var xmlhttp = new XMLHttpRequest();
-		xmlhttp.open("GET", file, false);
+		xmlhttp.open("GET", file, true);
 		xmlhttp.setRequestHeader("Accept", "application/xml");
-		xmlhttp.send(null);
-		if (xmlhttp.status != 200) {
-			console.log("███ couldn't open file: " + file + " - XMLHttpRequest.status=" + xmlhttp.status);
-			return false;
+		xmlhttp.onreadystatechange = function() {
+			if (xmlhttp.readyState == 4) {
+				if (xmlhttp.status == 200) {
+					var xmlDoc = xmlhttp.responseXML;
+					vtrainer.loadXML(xmlDoc);
+					// done loading, signal it
+					vtrainer.signalDoneLoading();
+				}
+			}
 		}
-		var xmlDoc = xmlhttp.responseXML;
-		this.loadXML(xmlDoc);
-		// done loading, signal it
-		this.signalDoneLoading();
+		xmlhttp.send(null);
 	},
 
 	// ███████████████ main functions █████████████████████████████████████████████████████████████████████
@@ -183,29 +181,33 @@ var vtrainer = {
 		var occSteps = 10;
 		var currentStep = 0;
 
-		do {
-			var favsArray = Object.keys(this.oFavs);
-			// TODO correct random probability
-			if ((favsArray.length > 0) && (Math.floor(Math.random() / CONST_FAV_PROBABILITY) < 1) || this.aData.length <= favsArray.length) {
-				// if there are favorites and we got a corresponding random or when all data are favorites
-				// get a random favorite
-				var randomIndex = Math.floor(Math.random() * favsArray.length);
-				var i = 0;
-				while (this.aData[i].vocable != favsArray[randomIndex])
-					i++;
-				tempElement = this.aData[i];
-			} else {
-				// get a random element (which also could be a favorite)
-				// (try to get the one with lowest # of occs)
-				for (i = 0; i < occSteps; i++) {
-					var randomIndex = Math.floor(Math.random() * this.aData.length);
-					if (!tempElement || (tempElement.occurrences-tempElement.shown) > (this.aData[randomIndex].occurrences-this.aData[randomIndex].shown))
-						tempElement = this.aData[randomIndex];
+		if (!this.oCurrentHanzi) {
+			tempElement = this.aData[Math.floor(Math.random() * this.aData.length)];
+		} else {
+			do {
+				var favsArray = Object.keys(this.oFavs);
+				// TODO correct random probability
+				if ((favsArray.length > 0) && (Math.floor(Math.random() / CONST_FAV_PROBABILITY) < 1) || this.aData.length <= favsArray.length) {
+					// if there are favorites and we got a corresponding random or when all data are favorites
+					// get a random favorite
+					var randomIndex = Math.floor(Math.random() * favsArray.length);
+					var i = 0;
+					while (this.aData[i].vocable != favsArray[randomIndex])
+						i++;
+					tempElement = this.aData[i];
+				} else {
+					// get a random element (which also could be a favorite)
+					// (try to get the one with lowest # of occs)
+					for (i = 0; i < occSteps; i++) {
+						var randomIndex = Math.floor(Math.random() * this.aData.length);
+						if (!tempElement || (tempElement.occurrences-tempElement.shown) > (this.aData[randomIndex].occurrences-this.aData[randomIndex].shown))
+							tempElement = this.aData[randomIndex];
+					}
 				}
-			}
-			// now test if it's the same element as the current displayed
-			currentStep++;
-		} while (this.oCurrentHanzi.vocable == tempElement.vocable && currentStep < maxSteps)
+				// now test if it's the same element as the current displayed
+				currentStep++;
+			} while (this.oCurrentHanzi.vocable == tempElement.vocable && currentStep < maxSteps)
+		}
 		this.oCurrentHanzi = tempElement;
 
 		tempElement.occurrences++;

@@ -12,12 +12,9 @@
 		<title>ChiTra Settings</title>
 		<script src="js/settings.js" type="text/javascript"></script>
 	</head>
-	<!--<body onload="initialize();">-->
 	<body>
-			font size: <select name="select_font" size="1">
-			</select>
-		<!--<br>
-			<a href="index.html">tables</a>-->
+		font size: <select name="select_font" size="1">
+		</select>
 		<br>
 			mode: <select naem="select_mode" size="1">
 				<option value="to_trans">from chinese</option>
@@ -25,14 +22,18 @@
 				<option value="audio">audio</option>
 			</select>
 		<br>
-			<input type="checkbox" value="check_input">input required</input>
-			<!-- TODO reload data from index.js -->
+			TTS server: <input type="text" value="">
+		<br>
+
+		<input type="checkbox" value="check_input">input required</input>
 		<input type="button" value="reset data" onclick="localStorage.removeItem('files');location.reload();">
 		<input type="button" value="info" onclick="window.open('info.html', '_self');">
+
 		<hr>
 		<!-- TODO display a loading screen while the table is loading -->
 		<table id="tDataFiles" width="100%">
 		</table>
+
 		<script type="text/javascript" src="phonegap.js"></script>
 		<script type="text/javascript">
 			initialize();
