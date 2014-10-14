@@ -3,14 +3,23 @@
  */
 // TODO reset favs before first next or ensure that greeting isn't favorable or remove greeting
 
+/*
+ * hash function from StackOverflow by Jesse Shieh
+ */
+String.prototype.hashCode = function() {
+	var hash = 0, i, chr, len;
+	if (this.length == 0) return hash;
+	for (i = 0, len = this.length; i < len; i++) {
+		chr   = this.charCodeAt(i);
+		hash  = ((hash << 5) - hash) + chr;
+		hash |= 0; // Convert to 32bit integer
+	}
+	return hash;
+};
+
 var CONST_FAV_PROBABILITY = 0.25;
 var standard_files = [
-	//{ url : "data/ger_radicals_1.xml", checked : true },
-	//{ url : "data/ger_radicals_2.xml", checked : true },
-	//{ url : "data/ger_radicals_3.xml", checked : true },
-	//{ url : "data/ger_radicals_4.xml", checked : true },
-	//{ url : "data/ger_radicals_5.xml", checked : true },
-	{ url : "data/en_numbers.xml", checked : true }
+	{ url : "https://raw.githubusercontent.com/MaLoe/chitra/master/vocabulary/en_numbers.xml", checked : true, name: "numbers en" }
 ]
 
 var vtrainer = {
@@ -20,13 +29,14 @@ var vtrainer = {
 	aAudioBuffer: [],
 	sAudioURL: "",
 	bDoneSettingUpLoaders: false,
+	fInitializeCallback: undefined,
 	nToLoadFiles: 0,   // XML loading is based on events, so we can easily end up with some parallel functions waiting for FS while our program is allready at the point where it could try to get the next element. We have to wait until all loaders finish.
 	// TODO minNextSteps / occsteps -> settings
 	// TODO maxNextSteps -> settings
 
     // Application Constructor
     initialize: function(onSuccess) {
-		this.onSuccess = onSuccess;
+		this.fInitializeCallback = onSuccess;
 		// load data
 		/*if (localStorage != null) {
 			this.aData = JSON.parse(localStorage.getItem("data"));
@@ -41,21 +51,15 @@ var vtrainer = {
     },
 	// ███████████████ data loading etc. ██████████████████████████████████████████████████████████████████
 	// Callbacks for signaling that all Loaders are done
-	signalStartedLoading: function() {
-		if (isNaN(this.nToLoadFiles))
-			this.nToLoadFiles = 1;
-		else
-			this.nToLoadFiles++;
-	},
 	signalDoneLoading: function() {
 		this.nToLoadFiles--;
-		if (this.nToLoadFiles <= 0 && this.bDoneSettingUpLoaders) {
+		if (this.nToLoadFiles <= 0) {
 			// save to local storage
 			// TODO
 			localStorage.setItem("data", JSON.stringify(this.aData));
 
 			console.log("███ finished loading data");
-			this.onSuccess();
+			this.fInitializeCallback();
 		}
 	},
 	// Reload Data 
@@ -65,6 +69,7 @@ var vtrainer = {
 		this.bDoneSettingUpLoaders = false;
 		console.log("███ loading data");
 		var aFiles = JSON.parse(localStorage.getItem("files"));
+		this.nToLoadFiles = aFiles.length;
 		// start up loaders for every checked file
 		for (i = 0; i < aFiles.length; i++) {
 			if (aFiles[i].checked) {
@@ -76,17 +81,16 @@ var vtrainer = {
 				} else if (url.match(/^file:/)) {
 					this.loadDataFromLocalFS(aFiles[i].url);
 				// check if it's in the webz
-				} else if (url.match(/^http:/)) {
-					console.log("███ TODO web loading");
+				} else if (url.match(/^https?:/)) {
+					this.loadDataFromURL(aFiles[i].url);
+				// something strange is in the base
 				} else {
+					this.signalDoneLoading();
 					console.log("███ TODO corrupted stuff");
 					//alert("corrupted data: unrecognized filetype: " + JSON.stringify(aFiles[i]);
 				}
 			}
 		}
-		// Done setting up loaders: if all async loaders are finished, someone calls onSuccess
-		this.bDoneSettingUpLoaders = true;
-		this.signalDoneLoading(); // just in case something was really fast and bDoneSettingUpLoaders was false
 	},
 	// Load XML
 	//
@@ -115,9 +119,46 @@ var vtrainer = {
 		console.log("███ parsed XML, entries: " + xmlEntries.length);
 	},
 
+	loadDataFromURL: function(sFileURL) {
+		var sCachedFilePath = "/mnt/sdcard/chitra/cached/data/" + sFileURL.hashCode() + ".xml";
+
+		console.log("███ loading file from url: " + sFileURL + "\n -> checking if cached ("+sCachedFilePath+")");
+		// check if file is cached and open it, if not, download it
+        window.resolveLocalFileSystemURL("file:///" + sCachedFilePath, function(fileEntry) {
+			// file is cached
+			console.log("███ is cached, opening");
+
+			vtrainer.loadDataFromLocalFS("file:///" + sCachedFilePath);
+		}, function(fail) {
+			// file not found, download it
+			console.log("███ not cached, downloading " + sFileURL + " to " + sCachedFilePath);
+
+			var fileTransfer = new FileTransfer();
+			var uri = encodeURI(sFileURL);
+
+			fileTransfer.download(
+				uri,
+				sCachedFilePath,
+				function(entry) {
+					console.log("download complete: " + entry.fullPath);
+					vtrainer.loadDataFromLocalFS("file:///" + sCachedFilePath);
+				},
+				function(error) {
+					console.log("download error source " + error.source);
+					console.log("download error target " + error.target);
+					console.log("download error code " + error.code);
+				},
+				false,
+				{
+					headers: {
+					}
+				}
+			);
+		});
+	},
+
 	loadDataFromLocalFS: function(sFileURL) {
-		this.signalStartedLoading();
-		console.log("███ loading file: " + sFileURL);
+		console.log("███ loading local file: " + sFileURL);
 		// get file
         window.resolveLocalFileSystemURL(sFileURL, function(fileEntry) {
 			fileEntry.file(function(file) {
@@ -135,12 +176,11 @@ var vtrainer = {
 		}, this.onFail);
 	},
 
-	loadDataFromInternal: function(file) {
-		this.signalStartedLoading();
-		console.log("███ loading file: " + file);
+	loadDataFromInternal: function(sFileURL) {
+		console.log("███ loading internal file: " + sFileURL);
 		// load DOM
 		var xmlhttp = new XMLHttpRequest();
-		xmlhttp.open("GET", file, true);
+		xmlhttp.open("GET", sFileURL, true);
 		xmlhttp.setRequestHeader("Accept", "application/xml");
 		xmlhttp.onreadystatechange = function() {
 			if (xmlhttp.readyState == 4) {

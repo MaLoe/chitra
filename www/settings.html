@@ -3,18 +3,24 @@
     License TODO
 -->
 <html>
-	<head>
-		<meta charset="utf-8" />
-		<meta name="format-detection" content="telephone=no" />
-		<!-- WARNING: for iOS 7, remove the width=device-width and height=device-height attributes. See https://issues.apache.org/jira/browse/CB-4323 -->
-		<meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height, target-densitydpi=medium-dpi" />
-		<link rel="stylesheet" type="text/css" href="css/settings.css" />
-		<title>ChiTra Settings</title>
-		<script src="js/settings.js" type="text/javascript"></script>
-	</head>
-	<body>
-		font size: <select name="select_font" size="1">
-		</select>
+<head>
+	<meta charset="utf-8" />
+	<meta name="format-detection" content="telephone=no" />
+	<!-- WARNING: for iOS 7, remove the width=device-width and height=device-height attributes. See https://issues.apache.org/jira/browse/CB-4323 -->
+	<meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height, target-densitydpi=medium-dpi" />
+	<link rel="stylesheet" type="text/css" href="css/settings.css" />
+	<title>ChiTra Settings</title>
+
+	<link rel="stylesheet" href="http://code.jquery.com/mobile/1.2.0-beta.1/jquery.mobile-1.2.0-beta.1.min.css" />
+	<script src="http://code.jquery.com/jquery-1.8.1.min.js"></script>
+	<script src="http://code.jquery.com/mobile/1.2.0-beta.1/jquery.mobile-1.2.0-beta.1.min.js"></script>
+
+	<script src="js/settings.js" type="text/javascript"></script>
+</head>
+<body>
+	<div data-role="page" id="mainpage">
+		<!--TODOfont size: <select name="select_font" size="1">
+		</select>-->
 		<br>
 			mode: <select naem="select_mode" size="1">
 				<option value="to_trans">from chinese</option>
@@ -25,18 +31,39 @@
 			TTS server: <input type="text" value="">
 		<br>
 
-		<input type="checkbox" value="check_input">input required</input>
-		<input type="button" value="reset data" onclick="localStorage.removeItem('files');location.reload();">
-		<input type="button" value="info" onclick="window.open('info.html', '_self');">
-
-		<hr>
-		<!-- TODO display a loading screen while the table is loading -->
-		<table id="tDataFiles" width="100%">
+		<!--TODO<label><input type="checkbox" value="check_input" />input required</label>-->
+		<table>
+			<tr>
+				<td><input type="button" value="reset data" onclick="localStorage.removeItem('files');location.reload();"></td>
+				<td><input type="button" value="info" onclick="window.open('info.html', '_self');"></td>
+				<td><input type="button" value="Add file" onclick="window.open('#page_add_file','_self');"></td>
+			</tr>
 		</table>
 
-		<script type="text/javascript" src="cordova.js"></script>
-		<script type="text/javascript">
-			initialize();
-		</script>
-    </body>
+		<hr>
+		<!-- TODO: display a loading screen while the table is loading (or not?)-->
+		<div id="divDataFiles">
+		</div>
+	</div>
+	<div data-role="page" id="page_add_file">
+		<h1>TODO add file</h1>
+		<!-- TODO: intermediate page -> url or file -->
+		<input type="text" value="url"></input>
+	</div>
+	<div data-role="page" id="page_edit_file">
+		<h1>Edit file</h1>
+		<!-- TODO -->
+		<table>
+			<tr>
+				<td><input type="button" value="Cancel" onclick=""></td>
+				<td><input type="button" value="Save" onclick=""></td>
+			</tr>
+		</table>
+	</div>
+
+	<script type="text/javascript" src="cordova.js"></script>
+	<script type="text/javascript">
+		initialize();
+	</script>
+</body>
 </html>

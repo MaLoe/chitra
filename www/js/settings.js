@@ -8,8 +8,9 @@ function initialize () {
 }
 
 function onDeviceReady () {
+	fillTable();
 	// Get a directory reader and display selected files
-	window.requestFileSystem(LocalFileSystem.PERSISTENT, 0, function(fileSystem) {
+	/*window.requestFileSystem(LocalFileSystem.PERSISTENT, 0, function(fileSystem) {
 		//console.log("███ got FS!");
 		fileSystem.root.getDirectory("./chinese_vocabulary", { create: true, exclusive: false }, function(directoryEntry) {
 			//console.log("███ got dir entry!");
@@ -17,7 +18,7 @@ function onDeviceReady () {
 			var directoryReader = directoryEntry.createReader();
 			// Get a list of all the entries in the directory
 			directoryReader.readEntries(fillTable, onFail);
-		}, onFail);
+		}, onFail);*/
 		/*fileSystem.root.getDirectory("/mnt/sdcard/chinese_vocabulary", { create: false, exclusive: false }, function(directoryEntry) {
 			console.log("███ got dir entry for mnt/sdcard!");
 
@@ -32,7 +33,7 @@ function onDeviceReady () {
 			// Get a list of all the entries in the directory
 			directoryReader.readEntries(fillTable, onFail);
 		}, onFail);*/
-	}, onFail);
+	//}, onFail);
 	/*window.requestFileSystem(LocalFileSystem.TEMPORARY, 0, function(fileSystem) {
 		//console.log("███ got FS!");
 		fileSystem.root.getDirectory("./chinese_vocabulary", { create: true, exclusive: false }, function(directoryEntry) {
@@ -72,7 +73,7 @@ function setFileSelection(sUrl, bChecked) {
 }
 
 function fillTable(entries) {
-	console.log("███ got reader!!!");
+	/*console.log("███ got reader!!!");
 	var tableref = document.getElementById("tDataFiles");
 	var tbdy = document.createElement("tbody");
     var i, j;
@@ -106,16 +107,18 @@ function fillTable(entries) {
 		tr.appendChild(td_chck);
 		tr.appendChild(td_filename);
 		tbdy.appendChild(tr);
-    }
-	tableref.appendChild(tbdy);
+    }*/
 	// display also entries which aren't from filetype local_storage
-	for (i = 0; i < aFiles.length; i++) {
+	var table = document.createElement("table");
+	table.style.width = "100%";
+
+	var tbdy = document.createElement("tbody");
+	var aFiles = JSON.parse(localStorage.getItem("files"));
+
+	for (var i = 0; i < aFiles.length; i++) {
 		if ( ! aFiles[i].url.match(/file:/)) {
 			var tr = document.createElement("tr");
-
-			var td_filename = document.createElement("td");
-			td_filename.appendChild(document.createTextNode(aFiles[i].url));
-
+			// selection checkbox
 			var td_chck = document.createElement("td");
 			var chckb = document.createElement("input");
 			chckb.type = "checkbox";
@@ -124,12 +127,39 @@ function fillTable(entries) {
 			chckb.onclick = function (event) { setFileSelection(event.target.value, event.target.checked) }
 			td_chck.appendChild(chckb);
 			td_chck.width = "100";
-
 			tr.appendChild(td_chck);
+			// filename column
+			var td_filename = document.createElement("td");
+			td_filename.appendChild(document.createTextNode(aFiles[i].name));
 			tr.appendChild(td_filename);
+			// edit button TODO: this is only temporary, this should be done by a press&hold
+			// mousedown -> timer setzen -> bei mouseup timer canceln, nach timer -> editshow
+			// -> auf die row betreffend, bzw touchstart&touchend
+			var td_edit = document.createElement("td");
+			td_edit.style.textAlign = "right";
+			var editb = document.createElement("input");
+			editb.type = "button";
+			editb.name = aFiles[i].url;
+			editb.value = "E"; // TODO icon & delete button
+			editb.onclick = function (event) { showEdit(event.target.name) }
+			td_edit.appendChild(editb);
+			td_edit.width = "100";
+			tr.appendChild(td_edit);
+			// append row
 			tbdy.appendChild(tr);
 		}
 	}
+	table.appendChild(tbdy);
+	document.getElementById("divDataFiles").innerHTML = "";
+	document.getElementById("divDataFiles").appendChild(table);
+}
+
+function showEdit(sFileID) {
+	window.open("#page_edit_file","_self");
+}
+
+function addFile() {
+	// TODO jquery dialog?
 }
 
 function onFail(error) {
