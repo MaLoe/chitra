@@ -2,6 +2,7 @@
  * License TODO
  */
 // TODO reset favs before first next or ensure that greeting isn't favorable or remove greeting
+// console.log("███" + JSON.stringify(dir,null,4)); -> indented output of an object - console.dir doesn't work nice in adb
 
 /*
  * hash function from StackOverflow by Jesse Shieh
@@ -120,41 +121,46 @@ var vtrainer = {
 	},
 
 	loadDataFromURL: function(sFileURL) {
-		var sCachedFilePath = "/mnt/sdcard/chitra/cached/data/" + sFileURL.hashCode() + ".xml";
+		window.requestFileSystem(LocalFileSystem.PERSISTENT, 0, function(fileSystem) {
+			// get cache/data dir of our application directory
+			fileSystem.root.getDirectory("cache/data", {create: true, exclusive: false}, function(dir) {
+				var sCachedFilePath = dir.nativeURL + sFileURL.hashCode() + ".xml";
 
-		console.log("███ loading file from url: " + sFileURL + "\n -> checking if cached ("+sCachedFilePath+")");
-		// check if file is cached and open it, if not, download it
-        window.resolveLocalFileSystemURL("file:///" + sCachedFilePath, function(fileEntry) {
-			// file is cached
-			console.log("███ is cached, opening");
+				console.log("███ loading file from url: " + sFileURL + "\n -> checking if cached ("+sCachedFilePath+")");
+				// check if file is cached and open it, if not, download it
+				window.resolveLocalFileSystemURL(sCachedFilePath, function(fileEntry) {
+					// file is cached
+					console.log("███ is cached, opening");
 
-			vtrainer.loadDataFromLocalFS("file:///" + sCachedFilePath);
-		}, function(fail) {
-			// file not found, download it
-			console.log("███ not cached, downloading " + sFileURL + " to " + sCachedFilePath);
+					vtrainer.loadDataFromLocalFS(sCachedFilePath);
+				}, function(fail) {
+					// file not found, download it
+					console.log("███ not cached, downloading " + sFileURL + " to " + sCachedFilePath);
 
-			var fileTransfer = new FileTransfer();
-			var uri = encodeURI(sFileURL);
+					var fileTransfer = new FileTransfer();
+					var uri = encodeURI(sFileURL);
 
-			fileTransfer.download(
-				uri,
-				sCachedFilePath,
-				function(entry) {
-					console.log("download complete: " + entry.fullPath);
-					vtrainer.loadDataFromLocalFS("file:///" + sCachedFilePath);
-				},
-				function(error) {
-					console.log("download error source " + error.source);
-					console.log("download error target " + error.target);
-					console.log("download error code " + error.code);
-				},
-				false,
-				{
-					headers: {
-					}
-				}
-			);
-		});
+					fileTransfer.download(
+						uri,
+						sCachedFilePath,
+						function(entry) {
+							console.log("download complete: " + entry.fullPath);
+							vtrainer.loadDataFromLocalFS(sCachedFilePath);
+						},
+						function(error) {
+							console.log("download error source " + error.source);
+							console.log("download error target " + error.target);
+							console.log("download error code " + error.code);
+						},
+						false,
+						{
+							headers: {
+							}
+						}
+					);
+				});
+			}, vtrainer.onFail);
+		}, vtrainer.onFail);
 	},
 
 	loadDataFromLocalFS: function(sFileURL) {
@@ -173,7 +179,7 @@ var vtrainer = {
 				};
 				freader.readAsText(file);
 			}, vtrainer.onFail);
-		}, this.onFail);
+		}, vtrainer.onFail);
 	},
 
 	loadDataFromInternal: function(sFileURL) {
@@ -314,11 +320,12 @@ var vtrainer = {
 		);
 	},
 	// fail function which displays an alert
+	// TODO: print a custom message
 	onFail: function(error) {
 		if (navigator.notification) {
-			navigator.notification.alert("Fail: " + error.code, null, Error, 'OK');
+			navigator.notification.alert("Error" + JSON.stringify(error), null, Error, 'OK');
 		} else {
-			alert("Fail: " + error.code);
+			alert("Error" + JSON.stringify(error));
 		}
 	}
 };

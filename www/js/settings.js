@@ -8,43 +8,10 @@ function initialize () {
 }
 
 function onDeviceReady () {
-	fillTable();
-	// Get a directory reader and display selected files
-	/*window.requestFileSystem(LocalFileSystem.PERSISTENT, 0, function(fileSystem) {
-		//console.log("███ got FS!");
-		fileSystem.root.getDirectory("./chinese_vocabulary", { create: true, exclusive: false }, function(directoryEntry) {
-			//console.log("███ got dir entry!");
-
-			var directoryReader = directoryEntry.createReader();
-			// Get a list of all the entries in the directory
-			directoryReader.readEntries(fillTable, onFail);
-		}, onFail);*/
-		/*fileSystem.root.getDirectory("/mnt/sdcard/chinese_vocabulary", { create: false, exclusive: false }, function(directoryEntry) {
-			console.log("███ got dir entry for mnt/sdcard!");
-
-			var directoryReader = directoryEntry.createReader();
-			// Get a list of all the entries in the directory
-			directoryReader.readEntries(fillTable, onFail);
-		}, onFail);
-		fileSystem.root.getDirectory("/mnt/extSdCard/chinese_vocabulary", { create: false, exclusive: false }, function(directoryEntry) {
-			console.log("███ got dir entry mnt/extsdcard!");
-
-			var directoryReader = directoryEntry.createReader();
-			// Get a list of all the entries in the directory
-			directoryReader.readEntries(fillTable, onFail);
-		}, onFail);*/
-	//}, onFail);
-	/*window.requestFileSystem(LocalFileSystem.TEMPORARY, 0, function(fileSystem) {
-		//console.log("███ got FS!");
-		fileSystem.root.getDirectory("./chinese_vocabulary", { create: true, exclusive: false }, function(directoryEntry) {
-			//console.log("███ got dir entry!");
-
-			var directoryReader = directoryEntry.createReader();
-			// Get a list of all the entries in the directory
-			directoryReader.readEntries(fillTable, onFail);
-		}, onFail);
-	}, onFail);*/
-
+	// Initialize vocable trainer
+	vtrainer.initialize(function () {
+		fillTable();
+	});
 }
 
 function setFileSelection(sUrl, bChecked) {
@@ -160,6 +127,12 @@ function showEdit(sFileID) {
 
 function addFile() {
 	// TODO jquery dialog?
+}
+
+function resetData() {
+	localStorage.removeItem('files');
+	// TODO: delete cache in application directory
+	location.reload();
 }
 
 function onFail(error) {
