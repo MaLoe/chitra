@@ -46,19 +46,27 @@
 		</div>
 	</div>
 	<div data-role="page" id="page_add_file">
-		<h1>TODO add file</h1>
+		<h1>add file</h1>
 		<!-- TODO: intermediate page -> url or file -->
-		<input type="text" value="url"></input>
+		name: <input type="text" name="name" value="">
+		URL: <input type="text" name="url" value="">
+		<table>
+			<tr>
+				<td><input type="button" value="Add" onclick=""></td>
+				<td><input type="button" value="Cancel" onclick=""></td>
+			</tr>
+		</table>
 	</div>
 	<div data-role="page" id="page_edit_file">
 		<h1>Edit file</h1>
 		<!-- TODO -->
-		<table>
-			<tr>
-				<td><input type="button" value="Cancel" onclick=""></td>
-				<td><input type="button" value="Save" onclick=""></td>
-			</tr>
-		</table>
+		<label for="name">name: </label>
+		<input type="text" id="name" name="name" value="">
+		<label for="url">URL: </label>
+		<input type="text" id="url" name="url" value="">
+		<input type="button" value="Cancel" onclick="">
+		<input type="button" value="Save" onclick="">
+		<input type="button" value="Delete" onclick="">
 	</div>
 
 	<script type="text/javascript" src="cordova.js"></script>

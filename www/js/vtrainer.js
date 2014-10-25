@@ -20,7 +20,7 @@ String.prototype.hashCode = function() {
 
 var CONST_FAV_PROBABILITY = 0.25;
 var standard_files = [
-	{ url : "https://raw.githubusercontent.com/MaLoe/chitra/master/vocabulary/en_numbers.xml", checked : true, name: "numbers en" }
+	{ url : "https://raw.githubusercontent.com/MaLoe/chitra/master/vocabulary/en_numbers.xml", checked : true, name : "numbers en" }
 ]
 
 var vtrainer = {
@@ -128,6 +128,7 @@ var vtrainer = {
 
 				console.log("███ loading file from url: " + sFileURL + "\n -> checking if cached ("+sCachedFilePath+")");
 				// check if file is cached and open it, if not, download it
+				// TODO: delete file if size == 0
 				window.resolveLocalFileSystemURL(sCachedFilePath, function(fileEntry) {
 					// file is cached
 					console.log("███ is cached, opening");
