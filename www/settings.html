@@ -34,6 +34,7 @@
 		<!--TODO<label><input type="checkbox" value="check_input" />input required</label>-->
 		<table>
 			<tr>
+				<!-- TODO: reset data should have an "are you sure" dialoge -->
 				<td><input type="button" value="reset data" onclick="resetData();"></td>
 				<td><input type="button" value="info" onclick="window.open('info.html', '_self');"></td>
 				<td><input type="button" value="Add file" onclick="window.open('#page_add_file','_self');"></td>
@@ -46,27 +47,27 @@
 		</div>
 	</div>
 	<div data-role="page" id="page_add_file">
-		<h1>add file</h1>
-		<!-- TODO: intermediate page -> url or file -->
-		name: <input type="text" name="name" value="">
-		URL: <input type="text" name="url" value="">
-		<table>
-			<tr>
-				<td><input type="button" value="Add" onclick=""></td>
-				<td><input type="button" value="Cancel" onclick=""></td>
-			</tr>
-		</table>
+		<form name="add_file" onsubmit="addFile(this.url.value, this.name.value, false);">
+			<h1>add file</h1>
+			<!-- TODO: intermediate page -> url or file and a file dialog -->
+			<label for="af_name">name: </label>
+			<input type="text" id="af_name" name="name" value="">
+			<label for="af_url">URL: </label>
+			<input type="text" id="af_url" name="url" value="">
+			<input type="submit" value="Add">
+			<input type="button" value="Cancel" onclick="window.open('#mainpage','_self');">
+		</form>
 	</div>
 	<div data-role="page" id="page_edit_file">
 		<h1>Edit file</h1>
 		<!-- TODO -->
-		<label for="name">name: </label>
-		<input type="text" id="name" name="name" value="">
-		<label for="url">URL: </label>
-		<input type="text" id="url" name="url" value="">
-		<input type="button" value="Cancel" onclick="">
+		<label for="ef_name">name: </label>
+		<input type="text" id="ef_name" name="name" value="">
+		<label for="ef_url">URL: </label>
+		<input type="text" id="ef_url" name="url" value="">
 		<input type="button" value="Save" onclick="">
 		<input type="button" value="Delete" onclick="">
+		<input type="button" value="Cancel" onclick="window.open('#mainpage','_self');">
 	</div>
 
 	<script type="text/javascript" src="cordova.js"></script>

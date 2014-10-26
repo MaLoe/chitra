@@ -68,9 +68,9 @@ var vtrainer = {
 	// reload all data, favorites etc.
 	reloadData: function() {
 		this.bDoneSettingUpLoaders = false;
-		console.log("███ loading data");
 		var aFiles = JSON.parse(localStorage.getItem("files"));
 		this.nToLoadFiles = aFiles.length;
+		console.log("███ loading data, number of files: " + this.nToLoadFiles);
 		// start up loaders for every checked file
 		for (i = 0; i < aFiles.length; i++) {
 			if (aFiles[i].checked) {
@@ -86,10 +86,13 @@ var vtrainer = {
 					this.loadDataFromURL(aFiles[i].url);
 				// something strange is in the base
 				} else {
-					this.signalDoneLoading();
-					console.log("███ TODO corrupted stuff");
-					//alert("corrupted data: unrecognized filetype: " + JSON.stringify(aFiles[i]);
+					console.log("█!█ scipping file, unreadable url: \"" + url + "\", left: " + (vtrainer.nToLoadFiles - 1));
+					vtrainer.signalDoneLoading(); // because the signalDoneLoading depends on the count relative to all files, we also have to signal files which we skip
+					//TODO: alert("corrupted data: unrecognized filetype: " + JSON.stringify(aFiles[i]);
 				}
+			} else {
+				console.log("███ scipping unchecked file");
+				vtrainer.signalDoneLoading(); // because the signalDoneLoading depends on the count relative to all files, we also have to signal files which we skip
 			}
 		}
 	},
@@ -177,6 +180,7 @@ var vtrainer = {
 					vtrainer.loadXML(xmlDoc);
 					// done loading, signal it
 					vtrainer.signalDoneLoading();
+					console.log("███ finished loading local file, left: " + vtrainer.nToLoadFiles);
 				};
 				freader.readAsText(file);
 			}, vtrainer.onFail);
@@ -196,6 +200,7 @@ var vtrainer = {
 					vtrainer.loadXML(xmlDoc);
 					// done loading, signal it
 					vtrainer.signalDoneLoading();
+					console.log("███ finished loading internal file, left: " + vtrainer.nToLoadFiles);
 				}
 			}
 		}
@@ -322,11 +327,14 @@ var vtrainer = {
 	},
 	// fail function which displays an alert
 	// TODO: print a custom message
-	onFail: function(error) {
-		if (navigator.notification) {
-			navigator.notification.alert("Error" + JSON.stringify(error), null, Error, 'OK');
-		} else {
-			alert("Error" + JSON.stringify(error));
-		}
+	onFail: function(error, msg) {
+		if (!msg)
+			msg = "Error" + JSON.stringify(error);
+		msg = "█!█ " + msg;
+
+		if (navigator.notification)
+			navigator.notification.alert(msg, null, Error, 'OK');
+		else
+			alert(msg);
 	}
 };

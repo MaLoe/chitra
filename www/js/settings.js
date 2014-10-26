@@ -27,9 +27,10 @@ function setFileSelection(sUrl, bChecked) {
 	}
 	if (aFiles.length == i) {
 		// there are no settings for this url
-		aFiles[i] = new Object();
-		aFiles[i].url = sUrl;
-		aFiles[i].name = "";
+		aFiles[i] = {
+			url : sUrl,
+			name : ""
+		};
 	}
 	aFiles[i].checked = bChecked;
 	// save files array
@@ -46,18 +47,17 @@ function fillTable(entries) {
 				// scan the vocabulary dir and add all files if unknown
 				for (var i = 0; i < entries.length; i++) {
 					var found = false;
-					for (var j = 0; j < aFiles.length; j++) {
-						if (aFiles[j].url == entries[i].nativeURL) {
+					for (var j = 0; j < aFiles.length && !found; j++) {
+						if (aFiles[j].url == entries[i].nativeURL)
 							found = true;
-							break;
-						}
 					}
 					if (!found) {
-						var newFile = { url : entries[i].nativeURL, checked : false, name : "<vocabulary>/" + entries[i].name };
-						console.log(JSON.stringify(aFiles));
+						var newFile = {
+							url : entries[i].nativeURL,
+							checked : false,
+							name : "<vocabulary>/" + entries[i].name
+						};
 						aFiles.push(newFile);
-						console.log("post\n"+JSON.stringify(aFiles));
-						// TODO: save?
 					}
 				}
 				// fill table
@@ -113,8 +113,15 @@ function showEdit(sFileID) {
 	window.open("#page_edit_file","_self");
 }
 
-function addFile() {
-	// TODO jquery dialog?
+function addFile(url, name, checked) {
+	console.log("███ adding file: " + JSON.stringify({url : url, checked : Boolean(checked), name : name}));
+	var aFiles = JSON.parse(localStorage.getItem("files"));
+	aFiles.push({
+		url : url,
+		checked : Boolean(checked),
+		name : name
+	});
+	localStorage.setItem("files", JSON.stringify(aFiles));
 }
 
 function resetData() {
@@ -123,8 +130,16 @@ function resetData() {
 	location.reload();
 }
 
-function onFail(error) {
-	console.log("███ fail :(");
+function onFail(error, msg) {
+	if (!msg)
+		msg = "Error" + JSON.stringify(error);
+	msg = "█!█ " + msg;
+
+	if (navigator.notification)
+		navigator.notification.alert(msg, null, Error, 'OK');
+	else
+		alert(msg);
+	/*console.log("███ fail :(");
     //alert("Failed while reading data files: " + error.code);
 	var tableref = document.getElementById("tDataFiles");
 	var tbdy = document.createElement("tbody");
@@ -133,5 +148,5 @@ function onFail(error) {
 	td.appendChild(document.createTextNode("Failed while reading data files: " + error.code));
 	tr.appendChild(td);
 	tbdy.appendChild(tr);
-	tableref.appendChild(tbdy);
+	tableref.appendChild(tbdy);*/
 }
