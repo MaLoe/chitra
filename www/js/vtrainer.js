@@ -126,45 +126,48 @@ var vtrainer = {
 	loadDataFromURL: function(sFileURL) {
 		window.requestFileSystem(LocalFileSystem.PERSISTENT, 0, function(fileSystem) {
 			// get cache/data dir of our application directory
-			fileSystem.root.getDirectory("cache/data", {create: true, exclusive: false}, function(dir) {
-				var sCachedFilePath = dir.nativeURL + sFileURL.hashCode() + ".xml";
+			// this has to be requested separately because this function failed to create "cache/data"
+			fileSystem.root.getDirectory("cache", {create: true, exclusive: false}, function(dir) {
+				dir.getDirectory("data", {create: true, exclusive: false}, function(subdir) {
+					var sCachedFilePath = subdir.nativeURL + sFileURL.hashCode() + ".xml";
 
-				console.log("███ loading file from url: " + sFileURL + "\n -> checking if cached ("+sCachedFilePath+")");
-				// check if file is cached and open it, if not, download it
-				// TODO: delete file if size == 0
-				window.resolveLocalFileSystemURL(sCachedFilePath, function(fileEntry) {
-					// file is cached
-					console.log("███ is cached, opening");
+					console.log("███ loading file from url: " + sFileURL + "\n -> checking if cached ("+sCachedFilePath+")");
+					// check if file is cached and open it, if not, download it
+					// TODO: delete file if size == 0
+					window.resolveLocalFileSystemURL(sCachedFilePath, function(fileEntry) {
+						// file is cached
+						console.log("███ is cached, opening");
 
-					vtrainer.loadDataFromLocalFS(sCachedFilePath);
-				}, function(fail) {
-					// file not found, download it
-					console.log("███ not cached, downloading " + sFileURL + " to " + sCachedFilePath);
+						vtrainer.loadDataFromLocalFS(sCachedFilePath);
+					}, function(fail) {
+						// file not found, download it
+						console.log("███ not cached, downloading " + sFileURL + " to " + sCachedFilePath);
 
-					var fileTransfer = new FileTransfer();
-					var uri = encodeURI(sFileURL);
+						var fileTransfer = new FileTransfer();
+						var uri = encodeURI(sFileURL);
 
-					fileTransfer.download(
-						uri,
-						sCachedFilePath,
-						function(entry) {
-							console.log("download complete: " + entry.fullPath);
-							vtrainer.loadDataFromLocalFS(sCachedFilePath);
-						},
-						function(error) {
-							console.log("download error source " + error.source);
-							console.log("download error target " + error.target);
-							console.log("download error code " + error.code);
-						},
-						false,
-						{
-							headers: {
+						fileTransfer.download(
+							uri,
+							sCachedFilePath,
+							function(entry) {
+								console.log("download complete: " + entry.fullPath);
+								vtrainer.loadDataFromLocalFS(sCachedFilePath);
+							},
+							function(error) {
+								console.log("download error source " + error.source);
+								console.log("download error target " + error.target);
+								console.log("download error code " + error.code);
+							},
+							false,
+							{
+								headers: {
+								}
 							}
-						}
-					);
-				});
-			}, vtrainer.onFail);
-		}, vtrainer.onFail);
+						);
+					});
+				}, function(e){vtrainer.onFail(e, "getDirectory(\"cache/data\") in loadDataFromURL(\"" + sFileURL + "\") failed")});
+			}, function(e){vtrainer.onFail(e, "getDirectory(\"cache\") in loadDataFromURL(\"" + sFileURL + "\") failed")});
+		}, function(e){vtrainer.onFail(e, "requestFileSystem in loadDataFromURL(\"" + sFileURL + "\") failed")});
 	},
 
 	loadDataFromLocalFS: function(sFileURL) {
@@ -183,8 +186,8 @@ var vtrainer = {
 					console.log("███ finished loading local file, left: " + vtrainer.nToLoadFiles);
 				};
 				freader.readAsText(file);
-			}, vtrainer.onFail);
-		}, vtrainer.onFail);
+			}, function(e){vtrainer.onFail(e, "getting file in loadDataFromLocalFS(\"" + sFileURL + "\") failed")});
+		}, function(e){vtrainer.onFail(e, "resolveLocalFileSystemURL in loadDataFromLocalFS(\"" + sFileURL + "\") failed")});
 	},
 
 	loadDataFromInternal: function(sFileURL) {
@@ -299,8 +302,10 @@ var vtrainer = {
 			console.log("loading audio...");
 			var url = this.sAudioURL + hanzi;
 
+			// TODO update to appdir/cache
 			this.downloadFile(url, "sdcard/chinese_vocabulary/audio/" + hanzi + ".mp3", function (url, out) {
 				// audio loaded, cache and play it
+				// TODO update to appdir/cache
 				audio = new Media("chinese_vocabulary/audio/" + hanzi + ".mp3");
 				this.aAudioBuffer[hanzi] = audio;
 				audio.play();
@@ -329,8 +334,8 @@ var vtrainer = {
 	// TODO: print a custom message
 	onFail: function(error, msg) {
 		if (!msg)
-			msg = "Error" + JSON.stringify(error);
-		msg = "█!█ " + msg;
+			msg = "Error:";
+		msg += " " + JSON.stringify(error);
 
 		if (navigator.notification)
 			navigator.notification.alert(msg, null, Error, 'OK');
