@@ -110,8 +110,8 @@ var vtrainer = {
 			else
 				var temp_comment = xmlElementComment[0].childNodes[0].nodeValue;
 			var element = {
-				vocable       : xmlEntries[j].getElementsByTagName("hanzi")[0].childNodes[0].nodeValue,
-				pronunciation : xmlEntries[j].getElementsByTagName("pinyin")[0].childNodes[0].nodeValue,
+				vocable       : xmlEntries[j].getElementsByTagName("vocable")[0].childNodes[0].nodeValue,
+				pronunciation : xmlEntries[j].getElementsByTagName("pronunciation")[0].childNodes[0].nodeValue,
 				translation   : xmlEntries[j].getElementsByTagName("translation")[0].childNodes[0].nodeValue,
 				comment       : temp_comment,
 				occurrences   : 0,
