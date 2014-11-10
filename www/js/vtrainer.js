@@ -24,31 +24,31 @@ var standard_files = [
 ]
 
 var vtrainer = {
-	oCurrentHanzi: undefined,   // current hanzi
-	oFavs: {},          // favorite hanzi
-	aData: [],         // runtime storage of hanzi and their data
+	oCurrentHanzi: undefined, /** current hanzi */
+	oFavs: {},                /** favorite hanzi */
+	oData: {},                /** runtime storage of vocables and their data - Map<FileURL, Collection<Vocable>> */
 	aAudioBuffer: [],
 	sAudioURL: "",
 	bDoneSettingUpLoaders: false,
 	fInitializeCallback: undefined,
-	nToLoadFiles: 0,   // XML loading is based on events, so we can easily end up with some parallel functions waiting for FS while our program is allready at the point where it could try to get the next element. We have to wait until all loaders finish.
+	nToLoadFiles: 0,   /** XML loading is based on events, so we can easily end up with some parallel functions waiting for FS while our program is allready at the point where it could try to get the next element. We have to wait until all loaders finish. */
 	// TODO minNextSteps / occsteps -> settings
 	// TODO maxNextSteps -> settings
 
     // Application Constructor
     initialize: function(onSuccess) {
-		this.fInitializeCallback = onSuccess;
 		// load data
-		/*if (localStorage != null) {
-			this.aData = JSON.parse(localStorage.getItem("data"));
-			// TODO test data structure?
-		} else {
-			aData = new Array();
-		}*/
-		if (!localStorage.getItem("files")) {
+		// TODO test data structure?
+		if (localStorage.getItem("data"))
+			this.oData = JSON.parse(localStorage.getItem("data"));
+		if (localStorage.getItem("favs"))
+			this.oFavs = JSON.parse(localStorage.getItem("favs"));
+		// set default files if not set
+		if (!localStorage.getItem("files"))
 			localStorage.setItem("files", JSON.stringify(standard_files));
-		}
-		this.reloadData();
+
+		this.fInitializeCallback = onSuccess; // we are working with callbacks and that's why we have to remember this function and call it later
+		this.reloadData(); // check if the data in oData is the one for the current files and load/remove if necessary
     },
 	// ███████████████ data loading etc. ██████████████████████████████████████████████████████████████████
 	// Callbacks for signaling that all Loaders are done
@@ -56,8 +56,8 @@ var vtrainer = {
 		this.nToLoadFiles--;
 		if (this.nToLoadFiles <= 0) {
 			// save to local storage
-			// TODO
-			localStorage.setItem("data", JSON.stringify(this.aData));
+			if (this.oData)
+				localStorage.setItem("data", JSON.stringify(this.oData));
 
 			console.log("███ finished loading data");
 			this.fInitializeCallback();
@@ -71,27 +71,40 @@ var vtrainer = {
 		var aFiles = JSON.parse(localStorage.getItem("files"));
 		this.nToLoadFiles = aFiles.length;
 		console.log("███ loading data, number of files: " + this.nToLoadFiles);
+		// iterate over files in oData and check if they are still selected, remove if necessary
+		for (var sFileURL in this.oData) {
+			if (this.oData.hasOwnProperty(sFileURL)) {
+				var unchecked = null;
+				for (var i = 0; i < aFiles.length && unchecked == null; i++)
+					if (sFileURL == aFiles[i].url)
+						unchecked = !aFiles[i].checked;
+
+				if (unchecked)
+					delete this.oData[sFileURL]; // remove this data because the file is unchecked
+			}
+		}
 		// start up loaders for every checked file
-		for (i = 0; i < aFiles.length; i++) {
-			if (aFiles[i].checked) {
-				var url = aFiles[i].url;
+		for (var i = 0; i < aFiles.length; i++) {
+			var sKey = aFiles[i].url; // we might have to use caching if it's a remote file and than there might be different URL in the loading process
+			if (aFiles[i].checked && !this.oData.hasOwnProperty(sKey)) {
+				var sFileURL = aFiles[i].url;
 				// check if it's internal
-				if (url.match(/^data\//)) {
-					this.loadDataFromInternal(aFiles[i].url);
+				if (sFileURL.match(/^data\//)) {
+					this.loadDataFromInternal(sKey, sFileURL);
 				// check if it's in local filesystem
-				} else if (url.match(/^file:/)) {
-					this.loadDataFromLocalFS(aFiles[i].url);
+				} else if (sFileURL.match(/^file:/)) {
+					this.loadDataFromLocalFS(sKey, sFileURL);
 				// check if it's in the webz
-				} else if (url.match(/^https?:/)) {
-					this.loadDataFromURL(aFiles[i].url);
+				} else if (sFileURL.match(/^https?:/)) {
+					this.loadDataFromURL(sKey, sFileURL);
 				// something strange is in the base
 				} else {
-					console.log("█!█ scipping file, unreadable url: \"" + url + "\", left: " + (vtrainer.nToLoadFiles - 1));
+					console.log("█!█ skipping file, unreadable url: \"" + sFileURL + "\", left: " + (vtrainer.nToLoadFiles - 1));
 					vtrainer.signalDoneLoading(); // because the signalDoneLoading depends on the count relative to all files, we also have to signal files which we skip
 					//TODO: alert("corrupted data: unrecognized filetype: " + JSON.stringify(aFiles[i]);
 				}
 			} else {
-				console.log("███ scipping unchecked file");
+				console.log("███ skipping unchecked or already loaded file");
 				vtrainer.signalDoneLoading(); // because the signalDoneLoading depends on the count relative to all files, we also have to signal files which we skip
 			}
 		}
@@ -99,31 +112,39 @@ var vtrainer = {
 	// Load XML
 	//
 	// loads all data from specified XML and pushes them into the array containing all data
-	loadXML: function(xmlDoc) {
+	loadXML: function(sKey, xmlDoc) {
 		var xmlEntries = xmlDoc.getElementsByTagName("entry");
 		// go through every element of this DOM and push them into the array
-		for (j = 0; j < xmlEntries.length; j++) {
+		var aVocabulary = [];
+		for (var i = 0; i < xmlEntries.length; i++) {
 			// comment might be absent, handle this
-			var xmlElementComment = xmlEntries[j].getElementsByTagName("comment");
+			var xmlElementComment = xmlEntries[i].getElementsByTagName("comment");
 			if (xmlElementComment.length < 1)
 				var temp_comment = "";
 			else
 				var temp_comment = xmlElementComment[0].childNodes[0].nodeValue;
+
 			var element = {
-				vocable       : xmlEntries[j].getElementsByTagName("vocable")[0].childNodes[0].nodeValue,
-				pronunciation : xmlEntries[j].getElementsByTagName("pronunciation")[0].childNodes[0].nodeValue,
-				translation   : xmlEntries[j].getElementsByTagName("translation")[0].childNodes[0].nodeValue,
+				vocable       : xmlEntries[i].getElementsByTagName("vocable")[0].childNodes[0].nodeValue,
+				pronunciation : xmlEntries[i].getElementsByTagName("pronunciation")[0].childNodes[0].nodeValue,
+				translation   : xmlEntries[i].getElementsByTagName("translation")[0].childNodes[0].nodeValue,
 				comment       : temp_comment,
 				occurrences   : 0,
 				shown         : 0,
 				favorite 	  : false
 			}
-			this.aData.push(element);
+			aVocabulary.push(element);
 		}
+		this.oData[sKey] = aVocabulary;
 		console.log("███ parsed XML, entries: " + xmlEntries.length);
 	},
 
-	loadDataFromURL: function(sFileURL) {
+	//! load data from URL. This is a callback, no return value possible.
+	/*!
+	 * @param sKey the key, under which it should be saved in data
+	 * @param sFileURL URL of a file, from which the data should be loaded
+	 */
+	loadDataFromURL: function(sKey, sFileURL) {
 		window.requestFileSystem(LocalFileSystem.PERSISTENT, 0, function(fileSystem) {
 			// get cache/data dir of our application directory
 			// this has to be requested separately because this function failed to create "cache/data"
@@ -138,7 +159,7 @@ var vtrainer = {
 						// file is cached
 						console.log("███ is cached, opening");
 
-						vtrainer.loadDataFromLocalFS(sCachedFilePath);
+						vtrainer.loadDataFromLocalFS(sKey, sCachedFilePath);
 					}, function(fail) {
 						// file not found, download it
 						console.log("███ not cached, downloading " + sFileURL + " to " + sCachedFilePath);
@@ -151,7 +172,7 @@ var vtrainer = {
 							sCachedFilePath,
 							function(entry) {
 								console.log("download complete: " + entry.fullPath);
-								vtrainer.loadDataFromLocalFS(sCachedFilePath);
+								vtrainer.loadDataFromLocalFS(sKey, sCachedFilePath);
 							},
 							function(error) {
 								console.log("download error source " + error.source);
@@ -170,7 +191,7 @@ var vtrainer = {
 		}, function(e){vtrainer.onFail(e, "requestFileSystem in loadDataFromURL(\"" + sFileURL + "\") failed")});
 	},
 
-	loadDataFromLocalFS: function(sFileURL) {
+	loadDataFromLocalFS: function(sKey, sFileURL) {
 		console.log("███ loading local file: " + sFileURL);
 		// get file
         window.resolveLocalFileSystemURL(sFileURL, function(fileEntry) {
@@ -180,7 +201,7 @@ var vtrainer = {
 					// got xml as string, parse it
 					var parser = new DOMParser();
 					var xmlDoc = parser.parseFromString(evt.target.result, "text/xml");
-					vtrainer.loadXML(xmlDoc);
+					vtrainer.loadXML(sKey, xmlDoc);
 					// done loading, signal it
 					vtrainer.signalDoneLoading();
 					console.log("███ finished loading local file, left: " + vtrainer.nToLoadFiles);
@@ -190,7 +211,7 @@ var vtrainer = {
 		}, function(e){vtrainer.onFail(e, "resolveLocalFileSystemURL in loadDataFromLocalFS(\"" + sFileURL + "\") failed")});
 	},
 
-	loadDataFromInternal: function(sFileURL) {
+	loadDataFromInternal: function(sKey, sFileURL) {
 		console.log("███ loading internal file: " + sFileURL);
 		// load DOM
 		var xmlhttp = new XMLHttpRequest();
@@ -200,7 +221,7 @@ var vtrainer = {
 			if (xmlhttp.readyState == 4) {
 				if (xmlhttp.status == 200) {
 					var xmlDoc = xmlhttp.responseXML;
-					vtrainer.loadXML(xmlDoc);
+					vtrainer.loadXML(sKey, xmlDoc);
 					// done loading, signal it
 					vtrainer.signalDoneLoading();
 					console.log("███ finished loading internal file, left: " + vtrainer.nToLoadFiles);
@@ -215,16 +236,22 @@ var vtrainer = {
 	// Favorite Toggle
 	//
 	// Toggles for current element the favorite state. Returns true if the current vocable was turned into
-	// a favorite.
+	// a favorite. Expects a string.
 	toggleFav: function(vocable) {
-		if(vocable in this.oFavs) {
+		var checked;
+		if (vocable in this.oFavs) {
 			delete this.oFavs[vocable];
-			return false;
+			// TODO slice
+			checked = false;
+		} else {
+			// TODO: info.html, was das benutzt, hat kein ocurrenthanzi, welches aber in next benutzt wird
+			// TODO: ich sollte entweder in favs nur die hanzi speichern oder kA
+			this.oFavs[vocable] = true;
+			checked = true;
 		}
-		else {
-			this.oFavs[vocable] = this.oCurrentHanzi;
-			return true;
-		}
+		console.log("███ toggle: " + vocable + " - " + checked);
+		localStorage.setItem("favs", JSON.stringify(this.oFavs));
+		return checked;
 	},
 	// Next Element
 	//
@@ -235,28 +262,36 @@ var vtrainer = {
 		var maxSteps = 100; // this is used to catch anything like only one element or elements with the same id
 		var occSteps = 10;
 		var currentStep = 0;
+		var aFiles = Object.keys(this.oData);
+		var favsArray = Object.keys(this.oFavs);
 
 		if (!this.oCurrentHanzi) {
-			tempElement = this.aData[Math.floor(Math.random() * this.aData.length)];
+			var sFileURL = aFiles[Math.floor(Math.random() * aFiles.length)];
+			tempElement = this.oData[sFileURL][Math.floor(Math.random() * this.oData[sFileURL].length)];
 		} else {
 			do {
-				var favsArray = Object.keys(this.oFavs);
 				// TODO correct random probability
-				if ((favsArray.length > 0) && (Math.floor(Math.random() / CONST_FAV_PROBABILITY) < 1) || this.aData.length <= favsArray.length) {
+				if ((favsArray.length > 0) && (Math.floor(Math.random() / CONST_FAV_PROBABILITY) < 1)) {
 					// if there are favorites and we got a corresponding random or when all data are favorites
 					// get a random favorite
 					var randomIndex = Math.floor(Math.random() * favsArray.length);
-					var i = 0;
-					while (this.aData[i].vocable != favsArray[randomIndex])
-						i++;
-					tempElement = this.aData[i];
+					// search for the whole vocable
+					var found = undefined;
+					for (var sFileURL in this.oData)
+						if (this.oData.hasOwnProperty(sFileURL))
+							for (var i = 0; i < this.oData[sFileURL].length && !found; i++)
+								if (this.oData[sFileURL][i].vocable == favsArray[randomIndex])
+									found = this.oData[sFileURL][i];
+
+					tempElement = found;
 				} else {
+					var sFileURL = aFiles[Math.floor(Math.random() * aFiles.length)];
 					// get a random element (which also could be a favorite)
 					// (try to get the one with lowest # of occs)
 					for (i = 0; i < occSteps; i++) {
-						var randomIndex = Math.floor(Math.random() * this.aData.length);
-						if (!tempElement || (tempElement.occurrences-tempElement.shown) > (this.aData[randomIndex].occurrences-this.aData[randomIndex].shown))
-							tempElement = this.aData[randomIndex];
+						var randomIndex = Math.floor(Math.random() * this.oData[sFileURL].length);
+						if (!tempElement || (tempElement.occurrences-tempElement.shown) > (this.oData[sFileURL][randomIndex].occurrences-this.oData[sFileURL][randomIndex].shown))
+							tempElement = this.oData[sFileURL][randomIndex];
 					}
 				}
 				// now test if it's the same element as the current displayed
@@ -266,6 +301,8 @@ var vtrainer = {
 		this.oCurrentHanzi = tempElement;
 
 		tempElement.occurrences++;
+		// save data
+		localStorage.setItem("data", JSON.stringify(this.oData));
 	},
 
 	show: function() {
@@ -288,7 +325,10 @@ var vtrainer = {
 		return this.oCurrentHanzi.vocable;
 	},
 	getLoadedVocables: function() {
-		return this.aData;
+		return this.oData;
+	},
+	getFavorites: function() {
+		return this.oFavs;
 	},
 	isFavorite: function(vocable) {
 		return (vocable in this.oFavs)

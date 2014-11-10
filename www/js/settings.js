@@ -125,8 +125,17 @@ function addFile(url, name, checked) {
 }
 
 function resetData() {
-	localStorage.removeItem('files');
-	// TODO: delete cache in application directory
+	// clear local storage
+	localStorage.removeItem("files");
+	localStorage.removeItem("data");
+	localStorage.removeItem("favs");
+	// clear cache
+	window.requestFileSystem(LocalFileSystem.PERSISTENT, 0, function(fileSystem) {
+		fileSystem.root.getDirectory("cache", {create: false, exclusive: false}, function(directoryEntry) {
+			directoryEntry.removeRecursively(function(){}, onFail);
+		}, onFail);
+	}, onFail);
+	// reload vtrainer
 	location.reload();
 }
 
