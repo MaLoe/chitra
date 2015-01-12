@@ -154,7 +154,7 @@ var vtrainer = {
 
 					console.log("███ loading file from url: " + sFileURL + "\n -> checking if cached ("+sCachedFilePath+")");
 					// check if file is cached and open it, if not, download it
-					// TODO: delete file if size == 0
+					// TODO: delete file if size == 0 or redownload or something
 					window.resolveLocalFileSystemURL(sCachedFilePath, function(fileEntry) {
 						// file is cached
 						console.log("███ is cached, opening");
@@ -163,28 +163,9 @@ var vtrainer = {
 					}, function(fail) {
 						// file not found, download it
 						console.log("███ not cached, downloading " + sFileURL + " to " + sCachedFilePath);
-
-						var fileTransfer = new FileTransfer();
-						var uri = encodeURI(sFileURL);
-
-						fileTransfer.download(
-							uri,
-							sCachedFilePath,
-							function(entry) {
-								console.log("download complete: " + entry.fullPath);
-								vtrainer.loadDataFromLocalFS(sKey, sCachedFilePath);
-							},
-							function(error) {
-								console.log("download error source " + error.source);
-								console.log("download error target " + error.target);
-								console.log("download error code " + error.code);
-							},
-							false,
-							{
-								headers: {
-								}
-							}
-						);
+						vtrainer.downloadFile(sFileURL, sCachedFilePath, function (url, out) {
+							vtrainer.loadDataFromLocalFS(sKey, sCachedFilePath);
+						}, function(e){});
 					});
 				}, function(e){vtrainer.onFail(e, "getDirectory(\"cache/data\") in loadDataFromURL(\"" + sFileURL + "\") failed")});
 			}, function(e){vtrainer.onFail(e, "getDirectory(\"cache\") in loadDataFromURL(\"" + sFileURL + "\") failed")});
@@ -342,32 +323,47 @@ var vtrainer = {
 			console.log("loading audio...");
 			var url = this.sAudioURL + hanzi;
 
-			// TODO update to appdir/cache
-			this.downloadFile(url, "sdcard/chinese_vocabulary/audio/" + hanzi + ".mp3", function (url, out) {
-				// audio loaded, cache and play it
-				// TODO update to appdir/cache
-				audio = new Media("chinese_vocabulary/audio/" + hanzi + ".mp3");
-				this.aAudioBuffer[hanzi] = audio;
-				audio.play();
-			});
+			window.requestFileSystem(LocalFileSystem.PERSISTENT, 0, function(fileSystem) {
+				fileSystem.root.getDirectory("cache", {create: true, exclusive: false}, function(dir) {
+					dir.getDirectory("audio", {create: true, exclusive: false}, function(subdir) {
+						var sCachedFilePath = subdir.nativeURL + hanzi + ".mp3";
+						vtrainer.downloadFile(url, sCachedFilePath, function (url, out) {
+							// audio loaded, cache and play it
+							audio = new Media(sCachedFilePath);
+							vtrainer.aAudioBuffer[hanzi] = audio;
+							audio.play();
+						}, function(e){});
+					}, function(e){vtrainer.onFail(e, "getDirectory(\"cache/audio\") in playAudio(\"" + hanzi + "\") failed")});
+				}, function(e){vtrainer.onFail(e, "getDirectory(\"cache\") in playAudio(\"" + hanzi + "\") failed")});
+			}, function(e){vtrainer.onFail(e, "requestFileSystem in playAudio(\"" + hanzi + "\") failed")});
 		} else {
 			// play the audio
 			this.aAudioBuffer[hanzi].play();
 		}
 	},
 	// download the file from url to outPath
-	downloadFile: function(url, outPath, onSuccess) {
+	downloadFile: function(sURL, sOutPath, onSuccess, onFail) {
 		var fileTransfer = new FileTransfer();
-
 		fileTransfer.download(
-			url,
-			outPath,
+			encodeURI(sURL),
+			sOutPath,
 			function(entry) {
-				console.log("███ download complete: " + entry.fullPath);
-				onSuccess(url, outPath);
+				// TODO entry.fullPath returns something strange
+				console.log("download complete: " + entry.fullPath);
+				onSuccess(sURL, sOutPath);
+				//vtrainer.loadDataFromLocalFS(sKey, sCachedFilePath);
 			},
-			this.onFail,
-			false
+			function(error) {
+				console.log("download error source " + error.source);
+				console.log("download error target " + error.target);
+				console.log("download error code " + error.code);
+				onFail(sURL, sOutPath);
+			},
+			false,
+			{
+				headers: {
+				}
+			}
 		);
 	},
 	// fail function which displays an alert
