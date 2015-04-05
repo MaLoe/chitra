@@ -22,22 +22,22 @@
 		<!--TODOfont size: <select name="select_font" size="1">
 		</select>-->
 		<br>
-			mode: <select naem="select_mode" size="1">
+			mode: <select id="select_mode" size="1" onchange="vtrainer.setMode(this.options[this.selectedIndex].value);">
 				<option value="to_trans">from chinese</option>
 				<option value="to_chin">to chinese</option>
 				<option value="audio">audio</option>
 			</select>
 		<br>
-			TTS server: <input type="text" value="">
+			TTS server: <input id="tts_server" type="text" value="" onchange="vtrainer.setTTSServerURL(this.value);">
 		<br>
 
-		<!--TODO<label><input type="checkbox" value="check_input" />input required</label>-->
+		<!-- TODO: <label><input type="checkbox" value="check_input" />input required</label>-->
 		<table>
 			<tr>
 				<!-- TODO: reset data should have an "are you sure" dialoge -->
 				<td><input type="button" value="reset data" onclick="resetData();"></td>
 				<td><input type="button" value="info" onclick="window.open('info.html', '_self');"></td>
-				<td><input type="button" value="Add file" onclick="window.open('#page_add_file','_self');"></td>
+				<td><input type="button" value="add file" onclick="window.open('#page_add_file','_self');"></td>
 			</tr>
 		</table>
 

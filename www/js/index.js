@@ -58,8 +58,18 @@ function next () {
 	document.getElementById("text_pronunciation").innerHTML = vtrainer.getCurrentPronunciation();
 	document.getElementById("text_translation").innerHTML = vtrainer.getCurrentTranslation();
 	document.getElementById("text_comment").innerHTML = vtrainer.getCurrentComment();
-	// show stuff according to current mode TODO
-	document.getElementById("text_vocable").style.visibility = "visible";
+	// show stuff according to current mode
+	// TODO: is it possible to use vtrainer.CONST?
+	switch(vtrainer.getMode()) {
+		case "to_trans":
+			document.getElementById("text_translation").style.visibility = "visible";
+			break;
+		case "audio":
+			vtrainer.playAudio();
+			break;
+		default:
+			document.getElementById("text_vocable").style.visibility = "visible";
+	}
 }
 
 function playAudio () {

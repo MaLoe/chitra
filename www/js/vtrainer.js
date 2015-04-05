@@ -19,21 +19,26 @@ String.prototype.hashCode = function() {
 };
 
 var CONST_FAV_PROBABILITY = 0.25;
-var standard_files = [
-	{ url : "https://raw.githubusercontent.com/MaLoe/chitra/master/vocabulary/en_numbers.xml", checked : true, name : "numbers en" }
-]
 
 var vtrainer = {
 	oCurrentHanzi: undefined, /** current hanzi */
 	oFavs: {},                /** favorite hanzi */
 	oData: {},                /** runtime storage of vocables and their data - Map<FileURL, Collection<Vocable>> */
 	aAudioBuffer: [],
-	sAudioURL: "",
 	bDoneSettingUpLoaders: false,
 	fInitializeCallback: undefined,
 	nToLoadFiles: 0,   /** XML loading is based on events, so we can easily end up with some parallel functions waiting for FS while our program is allready at the point where it could try to get the next element. We have to wait until all loaders finish. */
-	// TODO minNextSteps / occsteps -> settings
-	// TODO maxNextSteps -> settings
+
+	oSettings: {
+		asFiles: [
+			{ url : "https://raw.githubusercontent.com/MaLoe/chitra/master/vocabulary/en_numbers.xml", checked : true, name : "numbers en" }
+			// TODO: radicals
+		],
+		sAudioURL: "aaa", // TODO
+		sMode: "to_chin",
+		nMinNextSteps: 5, // TODO
+		nMaxNextSteps: 10 // TODO
+	},
 
     // Application Constructor
     initialize: function(onSuccess) {
@@ -43,9 +48,8 @@ var vtrainer = {
 			this.oData = JSON.parse(localStorage.getItem("data"));
 		if (localStorage.getItem("favs"))
 			this.oFavs = JSON.parse(localStorage.getItem("favs"));
-		// set default files if not set
-		if (!localStorage.getItem("files"))
-			localStorage.setItem("files", JSON.stringify(standard_files));
+		if (localStorage.getItem("settings"))
+			this.oSettings = JSON.parse(localStorage.getItem("settings"));
 
 		this.fInitializeCallback = onSuccess; // we are working with callbacks and that's why we have to remember this function and call it later
 		this.reloadData(); // check if the data in oData is the one for the current files and load/remove if necessary
@@ -68,26 +72,25 @@ var vtrainer = {
 	// reload all data, favorites etc.
 	reloadData: function() {
 		this.bDoneSettingUpLoaders = false;
-		var aFiles = JSON.parse(localStorage.getItem("files"));
-		this.nToLoadFiles = aFiles.length;
+		this.nToLoadFiles = this.oSettings.asFiles.length;
 		console.log("███ loading data, number of files: " + this.nToLoadFiles);
 		// iterate over files in oData and check if they are still selected, remove if necessary
 		for (var sFileURL in this.oData) {
 			if (this.oData.hasOwnProperty(sFileURL)) {
 				var unchecked = null;
-				for (var i = 0; i < aFiles.length && unchecked == null; i++)
-					if (sFileURL == aFiles[i].url)
-						unchecked = !aFiles[i].checked;
+				for (var i = 0; i < this.oSettings.asFiles.length && unchecked == null; i++)
+					if (sFileURL == this.oSettings.asFiles[i].url)
+						unchecked = !this.oSettings.asFiles[i].checked;
 
 				if (unchecked)
 					delete this.oData[sFileURL]; // remove this data because the file is unchecked
 			}
 		}
 		// start up loaders for every checked file
-		for (var i = 0; i < aFiles.length; i++) {
-			var sKey = aFiles[i].url; // we might have to use caching if it's a remote file and than there might be different URL in the loading process
-			if (aFiles[i].checked && !this.oData.hasOwnProperty(sKey)) {
-				var sFileURL = aFiles[i].url;
+		for (var i = 0; i < this.oSettings.asFiles.length; i++) {
+			var sKey = this.oSettings.asFiles[i].url; // we might have to use caching if it's a remote file and than there might be different URL in the loading process
+			if (this.oSettings.asFiles[i].checked && !this.oData.hasOwnProperty(sKey)) {
+				var sFileURL = this.oSettings.asFiles[i].url;
 				// check if it's internal
 				if (sFileURL.match(/^data\//)) {
 					this.loadDataFromInternal(sKey, sFileURL);
@@ -101,7 +104,7 @@ var vtrainer = {
 				} else {
 					console.log("█!█ skipping file, unreadable url: \"" + sFileURL + "\", left: " + (vtrainer.nToLoadFiles - 1));
 					vtrainer.signalDoneLoading(); // because the signalDoneLoading depends on the count relative to all files, we also have to signal files which we skip
-					//TODO: alert("corrupted data: unrecognized filetype: " + JSON.stringify(aFiles[i]);
+					//TODO: alert("corrupted data: unrecognized filetype: " + JSON.stringify(this.oSettings.asFiles[i]);
 				}
 			} else {
 				console.log("███ skipping unchecked or already loaded file");
@@ -290,52 +293,31 @@ var vtrainer = {
 		this.oCurrentHanzi.shown++;
 	},
 
-	// ███████████████ helper functions ███████████████████████████████████████████████████████████████████
-
-	// getters
-	getCurrentPronunciation: function() {
-		return this.oCurrentHanzi.pronunciation;
-	},
-	getCurrentTranslation: function() {
-		return this.oCurrentHanzi.translation;
-	},
-	getCurrentComment: function() {
-		return this.oCurrentHanzi.comment;
-	},
-	getCurrentVocable: function() {
-		return this.oCurrentHanzi.vocable;
-	},
-	getLoadedVocables: function() {
-		return this.oData;
-	},
-	getFavorites: function() {
-		return this.oFavs;
-	},
-	isFavorite: function(vocable) {
-		return (vocable in this.oFavs)
-	},
-
 	// TTS for current element
 	playAudio: function() {
 		var hanzi = this.oCurrentHanzi.vocable;
 		if (!this.aAudioBuffer[hanzi]) {
-			// load the audio
-			console.log("loading audio...");
-			var url = this.sAudioURL + hanzi;
+			if (this.getTTSServerURL()) {
+				// load the audio
+				console.log("loading audio...");
+				var url = this.getTTSServerURL() + hanzi;
 
-			window.requestFileSystem(LocalFileSystem.PERSISTENT, 0, function(fileSystem) {
-				fileSystem.root.getDirectory("cache", {create: true, exclusive: false}, function(dir) {
-					dir.getDirectory("audio", {create: true, exclusive: false}, function(subdir) {
-						var sCachedFilePath = subdir.nativeURL + hanzi + ".mp3";
-						vtrainer.downloadFile(url, sCachedFilePath, function (url, out) {
-							// audio loaded, cache and play it
-							audio = new Media(sCachedFilePath);
-							vtrainer.aAudioBuffer[hanzi] = audio;
-							audio.play();
-						}, function(e){});
-					}, function(e){vtrainer.onFail(e, "getDirectory(\"cache/audio\") in playAudio(\"" + hanzi + "\") failed")});
-				}, function(e){vtrainer.onFail(e, "getDirectory(\"cache\") in playAudio(\"" + hanzi + "\") failed")});
-			}, function(e){vtrainer.onFail(e, "requestFileSystem in playAudio(\"" + hanzi + "\") failed")});
+				window.requestFileSystem(LocalFileSystem.PERSISTENT, 0, function(fileSystem) {
+					fileSystem.root.getDirectory("cache", {create: true, exclusive: false}, function(dir) {
+						dir.getDirectory("audio", {create: true, exclusive: false}, function(subdir) {
+							var sCachedFilePath = subdir.nativeURL + hanzi + ".mp3";
+							vtrainer.downloadFile(url, sCachedFilePath, function (url, out) {
+								// audio loaded, cache and play it
+								audio = new Media(sCachedFilePath);
+								vtrainer.aAudioBuffer[hanzi] = audio;
+								audio.play();
+							}, function(e){});
+						}, function(e){vtrainer.onFail(e, "getDirectory(\"cache/audio\") in playAudio(\"" + hanzi + "\") failed")});
+					}, function(e){vtrainer.onFail(e, "getDirectory(\"cache\") in playAudio(\"" + hanzi + "\") failed")});
+				}, function(e){vtrainer.onFail(e, "requestFileSystem in playAudio(\"" + hanzi + "\") failed")});
+			} else {
+				alert("You need a working TTS-URL for this feature.");
+			}
 		} else {
 			// play the audio
 			this.aAudioBuffer[hanzi].play();
@@ -366,6 +348,11 @@ var vtrainer = {
 			}
 		);
 	},
+	// save settings to local storage
+	saveSettings: function() {
+		localStorage.setItem("settings", JSON.stringify(this.oSettings));
+		console.log("███ saved settings");
+	},
 	// fail function which displays an alert
 	// TODO: print a custom message
 	onFail: function(error, msg) {
@@ -377,5 +364,74 @@ var vtrainer = {
 			navigator.notification.alert(msg, null, Error, 'OK');
 		else
 			alert(msg);
+	},
+
+	// ███████████████ getter/setter ██████████████████████████████████████████████████████████████████████
+
+	getCurrentPronunciation: function() {
+		return this.oCurrentHanzi.pronunciation;
+	},
+	getCurrentTranslation: function() {
+		return this.oCurrentHanzi.translation;
+	},
+	getCurrentComment: function() {
+		return this.oCurrentHanzi.comment;
+	},
+	getCurrentVocable: function() {
+		return this.oCurrentHanzi.vocable;
+	},
+	getLoadedVocables: function() {
+		return this.oData;
+	},
+	getFavorites: function() {
+		return this.oFavs;
+	},
+	getTTSServerURL: function() {
+		return this.oSettings.sAudioURL;
+	},
+	setTTSServerURL: function(sURL) {
+		this.oSettings.sAudioURL = sURL;
+		this.saveSettings();
+	},
+	getMode: function() {
+		return this.oSettings.sMode;
+	},
+	setMode: function(sMode) {
+		this.oSettings.sMode = sMode;
+		this.saveSettings();
+	},
+	// TODO: getFiles: return an array of files? (it's better than getting length and the files per index later)
+	getFileSelections: function() {
+		return this.oSettings.asFiles.slice();
+	},
+	// TODO: setFile?key, ...) key should be the URL -> overwritten if present
+	// TODO: the function below should probably be refined to setFile(key, ...)
+	setFileSelection: function(sUrl, bChecked, sName) {
+		// get files array
+		var aFiles = vtrainer.oSettings.asFiles;
+		// set new value
+		var i = 0;
+		while (i < aFiles.length) {
+			if (aFiles[i].url == sUrl) {
+				break;
+			}
+			i++;
+		}
+		if (aFiles.length == i) {
+			// there are no settings for this url
+			aFiles[i] = {
+				url : sUrl,
+				name : (sName == null ? sName : "")
+			};
+		}
+		aFiles[i].checked = bChecked;
+		if (sName != null)
+			aFiles[i].name = sName;
+
+		this.saveSettings();
+	},
+	isFavorite: function(vocable) {
+		return (vocable in this.oFavs)
 	}
+
 };

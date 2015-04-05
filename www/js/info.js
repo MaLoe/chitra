@@ -78,23 +78,31 @@ function displayLoadedVocabulary (id) {
 }
 
 function displaySettings (id) {
-	var taleref = document.getElementById(id);
-	var files = localStorage.getItem("files");
+	oContent = {
+		files: JSON.stringify(vtrainer.getFileSelections()),
+		TTS: vtrainer.getTTSServerURL(),
+		mode: vtrainer.getMode()
+	};
 
 	var tableref = document.getElementById(id);
 	var tbdy = document.createElement("tbody");
-	var tr = document.createElement("tr");
 
-	var td_s_key = document.createElement("td");
-	var td_s_val = document.createElement("td");
+	for (var setting in oContent) {
+		if (oContent.hasOwnProperty(setting)) {
+			var tr = document.createElement("tr");
 
-	td_s_key.appendChild(document.createTextNode("files"));
-	td_s_val.appendChild(document.createTextNode(files));
+			var td_s_key = document.createElement("td");
+			var td_s_val = document.createElement("td");
 
-	tr.appendChild(td_s_key);
-	tr.appendChild(td_s_val);
+			td_s_key.appendChild(document.createTextNode(setting));
+			td_s_val.appendChild(document.createTextNode(oContent[setting]));
 
-	tbdy.appendChild(tr);
+			tr.appendChild(td_s_key);
+			tr.appendChild(td_s_val);
+
+			tbdy.appendChild(tr);
+		}
+	}
 	tableref.appendChild(tbdy);
 }
 

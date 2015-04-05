@@ -10,31 +10,10 @@ function initialize () {
 function onDeviceReady () {
 	// Initialize vocable trainer
 	vtrainer.initialize(function () {
+		document.getElementById("select_mode").value = vtrainer.getMode();
+		document.getElementById("tts_server").value = vtrainer.getTTSServerURL();
 		fillTable();
 	});
-}
-
-function setFileSelection(sUrl, bChecked) {
-	// get files array
-	var aFiles = JSON.parse(localStorage.getItem("files"));
-	// set new value
-	var i = 0;
-	while (i < aFiles.length) {
-		if (aFiles[i].url == sUrl) {
-			break;
-		}
-		i++;
-	}
-	if (aFiles.length == i) {
-		// there are no settings for this url
-		aFiles[i] = {
-			url : sUrl,
-			name : ""
-		};
-	}
-	aFiles[i].checked = bChecked;
-	// save files array
-	localStorage.setItem("files", JSON.stringify(aFiles));
 }
 
 function fillTable(entries) {
@@ -43,9 +22,12 @@ function fillTable(entries) {
 			var directoryReader = directoryEntry.createReader();
 			// Get a list of all the entries in the directory
 			directoryReader.readEntries(function(entries) {
+				// TODO oSettings
+				var oPresentFiles = {}; // used to check if the file is still present
 				var aFiles = JSON.parse(localStorage.getItem("files"));
 				// scan the vocabulary dir and add all files if unknown
 				for (var i = 0; i < entries.length; i++) {
+					oPresentFiles[entries[i].nativeURL] = true;
 					var found = false;
 					for (var j = 0; j < aFiles.length && !found; j++) {
 						if (aFiles[j].url == entries[i].nativeURL)
@@ -58,6 +40,7 @@ function fillTable(entries) {
 							name : "<vocabulary>/" + entries[i].name
 						};
 						aFiles.push(newFile);
+						// TODO new function? -> if so aFiles should be a copy
 					}
 				}
 				// fill table
@@ -67,6 +50,10 @@ function fillTable(entries) {
 				var tbdy = document.createElement("tbody");
 
 				for (var i = 0; i < aFiles.length; i++) {
+					// dont display files here which are not present
+					if (!(aFiles[i].url in oPresentFiles) && aFiles[i].url.indexOf("TODO") != -1)
+						continue;
+
 					var tr = document.createElement("tr");
 					// selection checkbox
 					var td_chck = document.createElement("td");
@@ -74,7 +61,7 @@ function fillTable(entries) {
 					chckb.type = "checkbox";
 					chckb.value = aFiles[i].url;
 					chckb.checked = aFiles[i].checked;
-					chckb.onclick = function (event) { setFileSelection(event.target.value, event.target.checked) }
+					chckb.onclick = function (event) { vtrainer.setFileSelection(event.target.value, event.target.checked) }
 					td_chck.appendChild(chckb);
 					td_chck.width = "100";
 					tr.appendChild(td_chck);
@@ -115,18 +102,20 @@ function showEdit(sFileID) {
 
 function addFile(url, name, checked) {
 	console.log("███ adding file: " + JSON.stringify({url : url, checked : Boolean(checked), name : name}));
+	// TODO
 	var aFiles = JSON.parse(localStorage.getItem("files"));
 	aFiles.push({
 		url : url,
 		checked : Boolean(checked),
 		name : name
 	});
+	// TODO
 	localStorage.setItem("files", JSON.stringify(aFiles));
 }
 
 function resetData() {
 	// clear local storage
-	localStorage.removeItem("files");
+	localStorage.removeItem("settings");
 	localStorage.removeItem("data");
 	localStorage.removeItem("favs");
 	// clear cache
