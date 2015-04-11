@@ -79,7 +79,7 @@ function displayLoadedVocabulary (id) {
 
 function displaySettings (id) {
 	oContent = {
-		files: JSON.stringify(vtrainer.getFileSelections()),
+		files: JSON.stringify(vtrainer.getFileSelections(), null, "  "),
 		TTS: vtrainer.getTTSServerURL(),
 		mode: vtrainer.getMode()
 	};
@@ -93,9 +93,11 @@ function displaySettings (id) {
 
 			var td_s_key = document.createElement("td");
 			var td_s_val = document.createElement("td");
+			var content = document.createElement("pre");
+			content.innerText = oContent[setting];
 
 			td_s_key.appendChild(document.createTextNode(setting));
-			td_s_val.appendChild(document.createTextNode(oContent[setting]));
+			td_s_val.appendChild(content);
 
 			tr.appendChild(td_s_key);
 			tr.appendChild(td_s_val);

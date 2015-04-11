@@ -22,9 +22,8 @@ function fillTable(entries) {
 			var directoryReader = directoryEntry.createReader();
 			// Get a list of all the entries in the directory
 			directoryReader.readEntries(function(entries) {
-				// TODO oSettings
 				var oPresentFiles = {}; // used to check if the file is still present
-				var aFiles = JSON.parse(localStorage.getItem("files"));
+				var aFiles = vtrainer.getFileSelections();
 				// scan the vocabulary dir and add all files if unknown
 				for (var i = 0; i < entries.length; i++) {
 					oPresentFiles[entries[i].nativeURL] = true;
@@ -34,13 +33,12 @@ function fillTable(entries) {
 							found = true;
 					}
 					if (!found) {
-						var newFile = {
-							url : entries[i].nativeURL,
-							checked : false,
-							name : "<vocabulary>/" + entries[i].name
-						};
-						aFiles.push(newFile);
-						// TODO new function? -> if so aFiles should be a copy
+						// save file settings if we found a new one
+						vtrainer.setFileSelection(
+							entries[i].nativeURL, false,
+							"<vocabulary>/" + entries[i].name
+						);
+						aFiles = vtrainer.getFileSelections();
 					}
 				}
 				// fill table
@@ -50,7 +48,7 @@ function fillTable(entries) {
 				var tbdy = document.createElement("tbody");
 
 				for (var i = 0; i < aFiles.length; i++) {
-					// dont display files here which are not present
+					// TODO: dont display files here which are not present
 					if (!(aFiles[i].url in oPresentFiles) && aFiles[i].url.indexOf("TODO") != -1)
 						continue;
 
@@ -61,7 +59,9 @@ function fillTable(entries) {
 					chckb.type = "checkbox";
 					chckb.value = aFiles[i].url;
 					chckb.checked = aFiles[i].checked;
-					chckb.onclick = function (event) { vtrainer.setFileSelection(event.target.value, event.target.checked) }
+					chckb.onclick = function (event) {
+						vtrainer.setFileSelection(event.target.value, event.target.checked)
+					}
 					td_chck.appendChild(chckb);
 					td_chck.width = "100";
 					tr.appendChild(td_chck);
@@ -97,20 +97,20 @@ function fillTable(entries) {
 }
 
 function showEdit(sFileID) {
+	// TODO: files with an url as an id
+	var aFiles = vtrainer.getFileSelections();
+	for (var j = 0; j < aFiles.length; j++) {
+		if (aFiles[j].url == sFileID) {
+			document.getElementById("ef_url").value = aFiles[j].url;
+			document.getElementById("ef_name").value = aFiles[j].name;
+			break;
+		}
+	}
 	window.open("#page_edit_file","_self");
 }
 
 function addFile(url, name, checked) {
-	console.log("███ adding file: " + JSON.stringify({url : url, checked : Boolean(checked), name : name}));
-	// TODO
-	var aFiles = JSON.parse(localStorage.getItem("files"));
-	aFiles.push({
-		url : url,
-		checked : Boolean(checked),
-		name : name
-	});
-	// TODO
-	localStorage.setItem("files", JSON.stringify(aFiles));
+	vtrainer.setFileSelection(url, checked, name);
 }
 
 function resetData() {

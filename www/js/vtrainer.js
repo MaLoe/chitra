@@ -29,16 +29,7 @@ var vtrainer = {
 	fInitializeCallback: undefined,
 	nToLoadFiles: 0,   /** XML loading is based on events, so we can easily end up with some parallel functions waiting for FS while our program is allready at the point where it could try to get the next element. We have to wait until all loaders finish. */
 
-	oSettings: {
-		asFiles: [
-			{ url : "https://raw.githubusercontent.com/MaLoe/chitra/master/vocabulary/en_numbers.xml", checked : true, name : "numbers en" }
-			// TODO: radicals
-		],
-		sAudioURL: "aaa", // TODO
-		sMode: "to_chin",
-		nMinNextSteps: 5, // TODO
-		nMaxNextSteps: 10 // TODO
-	},
+	oSettings: {},
 
     // Application Constructor
     initialize: function(onSuccess) {
@@ -48,11 +39,11 @@ var vtrainer = {
 			this.oData = JSON.parse(localStorage.getItem("data"));
 		if (localStorage.getItem("favs"))
 			this.oFavs = JSON.parse(localStorage.getItem("favs"));
-		if (localStorage.getItem("settings"))
-			this.oSettings = JSON.parse(localStorage.getItem("settings"));
 
-		this.fInitializeCallback = onSuccess; // we are working with callbacks and that's why we have to remember this function and call it later
-		this.reloadData(); // check if the data in oData is the one for the current files and load/remove if necessary
+		this.loadSettings(function() {
+			console.log("███ got back from loadSettings())");
+			vtrainer.reloadData(onSuccess); // check if the data in oData is the one for the current files and load/remove if necessary
+		});
     },
 	// ███████████████ data loading etc. ██████████████████████████████████████████████████████████████████
 	// Callbacks for signaling that all Loaders are done
@@ -70,7 +61,8 @@ var vtrainer = {
 	// Reload Data 
 	//
 	// reload all data, favorites etc.
-	reloadData: function() {
+	reloadData: function(onSuccess) {
+		this.fInitializeCallback = onSuccess; // we are working with callbacks and that's why we have to remember this function and call it later
 		this.bDoneSettingUpLoaders = false;
 		this.nToLoadFiles = this.oSettings.asFiles.length;
 		console.log("███ loading data, number of files: " + this.nToLoadFiles);
@@ -116,6 +108,7 @@ var vtrainer = {
 	//
 	// loads all data from specified XML and pushes them into the array containing all data
 	loadXML: function(sKey, xmlDoc) {
+		console.log("███ parsing XML: " + sKey);
 		var xmlEntries = xmlDoc.getElementsByTagName("entry");
 		// go through every element of this DOM and push them into the array
 		var aVocabulary = [];
@@ -134,7 +127,7 @@ var vtrainer = {
 				comment       : temp_comment,
 				occurrences   : 0,
 				shown         : 0,
-				favorite 	  : false
+				favorite      : false
 			}
 			aVocabulary.push(element);
 		}
@@ -151,6 +144,7 @@ var vtrainer = {
 		window.requestFileSystem(LocalFileSystem.PERSISTENT, 0, function(fileSystem) {
 			// get cache/data dir of our application directory
 			// this has to be requested separately because this function failed to create "cache/data"
+			// TODO: after updating phonegap to 3.7.0 the filehandling seems to have changed
 			fileSystem.root.getDirectory("cache", {create: true, exclusive: false}, function(dir) {
 				dir.getDirectory("data", {create: true, exclusive: false}, function(subdir) {
 					var sCachedFilePath = subdir.nativeURL + sFileURL.hashCode() + ".xml";
@@ -333,7 +327,6 @@ var vtrainer = {
 				// TODO entry.fullPath returns something strange
 				console.log("download complete: " + entry.fullPath);
 				onSuccess(sURL, sOutPath);
-				//vtrainer.loadDataFromLocalFS(sKey, sCachedFilePath);
 			},
 			function(error) {
 				console.log("download error source " + error.source);
@@ -348,10 +341,59 @@ var vtrainer = {
 			}
 		);
 	},
-	// save settings to local storage
 	saveSettings: function() {
 		localStorage.setItem("settings", JSON.stringify(this.oSettings));
 		console.log("███ saved settings");
+	},
+	loadSettings: function(onSuccess) {
+		console.log("███ loading settings");
+		// try to load from persistent memory and if nothing's there, initialize it
+		if (localStorage.getItem("settings")) {
+			this.oSettings = JSON.parse(localStorage.getItem("settings"));
+			onSuccess();
+		} else {
+			// initialize with default settings
+			this.oSettings = {
+				asFiles: [
+					{ url : "https://raw.githubusercontent.com/MaLoe/chitra/master/vocabulary/en_numbers.xml", checked : true, name : "numbers en" }
+					// TODO: radicals
+				],
+				sAudioURL: "",
+				sMode: "to_chin",
+				nMinNextSteps: 5, // TODO
+				nMaxNextSteps: 10 // TODO
+			}
+			// if a settings file is present, load it and overwrite values
+			window.requestFileSystem(LocalFileSystem.PERSISTENT, 0, function(fileSystem) {
+				fileSystem.root.getFile("settings.json", null, function(fileEntry) {
+					fileEntry.file(function(file) {
+						var reader = new FileReader();
+						reader.onloadend = function(evt) {
+							try {
+								var overwrites = JSON.parse(evt.target.result);
+								// overwrite settings
+								for (var setting in overwrites) {
+									if (overwrites.hasOwnProperty(setting)) {
+										vtrainer.oSettings[setting] = overwrites[setting];
+									}
+								}
+							} catch (e) {
+								vtrainer.onFail("couldn't parse settings file\n" + e);
+							}
+							onSuccess();
+						};
+						reader.onerror = function(e){
+							// settings file probably not found, let's continue with our standard settings
+							onSuccess();
+						};
+						reader.readAsText(file);
+					});
+				}, function(e){
+					// settings file probably not found
+					onSuccess();
+				});
+			}, function(e){vtrainer.onFail(e, "requestFileSystem in loadSettings() failed")});
+		}
 	},
 	// fail function which displays an alert
 	// TODO: print a custom message
@@ -367,7 +409,7 @@ var vtrainer = {
 	},
 
 	// ███████████████ getter/setter ██████████████████████████████████████████████████████████████████████
-
+	// vocable related
 	getCurrentPronunciation: function() {
 		return this.oCurrentHanzi.pronunciation;
 	},
@@ -383,9 +425,13 @@ var vtrainer = {
 	getLoadedVocables: function() {
 		return this.oData;
 	},
+	isFavorite: function(vocable) {
+		return (vocable in this.oFavs)
+	},
 	getFavorites: function() {
 		return this.oFavs;
 	},
+	// settings related
 	getTTSServerURL: function() {
 		return this.oSettings.sAudioURL;
 	},
@@ -400,11 +446,11 @@ var vtrainer = {
 		this.oSettings.sMode = sMode;
 		this.saveSettings();
 	},
-	// TODO: getFiles: return an array of files? (it's better than getting length and the files per index later)
+	// TODO: getFiles: return an dict of files? (it's better than getting length and the files per index later)
 	getFileSelections: function() {
 		return this.oSettings.asFiles.slice();
 	},
-	// TODO: setFile?key, ...) key should be the URL -> overwritten if present
+	// TODO: setFile(key, ...) key should be the URL -> overwritten if present
 	// TODO: the function below should probably be refined to setFile(key, ...)
 	setFileSelection: function(sUrl, bChecked, sName) {
 		// get files array
@@ -429,9 +475,5 @@ var vtrainer = {
 			aFiles[i].name = sName;
 
 		this.saveSettings();
-	},
-	isFavorite: function(vocable) {
-		return (vocable in this.oFavs)
 	}
-
 };
