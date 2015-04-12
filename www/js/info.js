@@ -28,6 +28,7 @@ function displayLoadedVocabulary (id) {
 	for (var sFileKey in oData) {
 		if (oData.hasOwnProperty(sFileKey)) {
 			// create header row for file
+			// TODO: make a folding based on header rows
 			var tr_file = document.createElement("tr");
 			tr_file.style.backgroundColor = "#ffffff";
 			tr_file.style.color = "#000000";

@@ -23,22 +23,17 @@ function fillTable(entries) {
 			// Get a list of all the entries in the directory
 			directoryReader.readEntries(function(entries) {
 				var oPresentFiles = {}; // used to check if the file is still present
-				var aFiles = vtrainer.getFileSelections();
+				var oFiles = vtrainer.getFileSelections();
 				// scan the vocabulary dir and add all files if unknown
 				for (var i = 0; i < entries.length; i++) {
 					oPresentFiles[entries[i].nativeURL] = true;
-					var found = false;
-					for (var j = 0; j < aFiles.length && !found; j++) {
-						if (aFiles[j].url == entries[i].nativeURL)
-							found = true;
-					}
-					if (!found) {
+					if (!entries[i].nativeURL in oFiles) {
 						// save file settings if we found a new one
-						vtrainer.setFileSelection(
+						vtrainer.setFile(
 							entries[i].nativeURL, false,
 							"<vocabulary>/" + entries[i].name
 						);
-						aFiles = vtrainer.getFileSelections();
+						oFiles = vtrainer.getFileSelections();
 					}
 				}
 				// fill table
@@ -47,9 +42,9 @@ function fillTable(entries) {
 
 				var tbdy = document.createElement("tbody");
 
-				for (var i = 0; i < aFiles.length; i++) {
+				for (var sURL in oFiles) {
 					// TODO: dont display files here which are not present
-					if (!(aFiles[i].url in oPresentFiles) && aFiles[i].url.indexOf("TODO") != -1)
+					if (!(sURL in oPresentFiles) && sURL.indexOf("TODO") != -1)
 						continue;
 
 					var tr = document.createElement("tr");
@@ -57,8 +52,8 @@ function fillTable(entries) {
 					var td_chck = document.createElement("td");
 					var chckb = document.createElement("input");
 					chckb.type = "checkbox";
-					chckb.value = aFiles[i].url;
-					chckb.checked = aFiles[i].checked;
+					chckb.value = sURL;
+					chckb.checked = oFiles[sURL].checked;
 					chckb.onclick = function (event) {
 						vtrainer.setFileSelection(event.target.value, event.target.checked)
 					}
@@ -67,9 +62,9 @@ function fillTable(entries) {
 					tr.appendChild(td_chck);
 					// filename column
 					var td_filename = document.createElement("td");
-					var name = aFiles[i].name;
+					var name = oFiles[sURL].name;
 					if (name == "")
-						name = aFiles[i].url.substring(aFiles[i].url.lastIndexOf('/') + 1);
+						name = sURL.substring(sURL.lastIndexOf('/') + 1);
 					td_filename.appendChild(document.createTextNode(name));
 					tr.appendChild(td_filename);
 					// edit button TODO: this is only temporary, this should be done by a press&hold
@@ -79,7 +74,7 @@ function fillTable(entries) {
 					td_edit.style.textAlign = "right";
 					var editb = document.createElement("input");
 					editb.type = "button";
-					editb.name = aFiles[i].url;
+					editb.name = sURL;
 					editb.value = "E"; // TODO icon & delete button
 					editb.onclick = function (event) { showEdit(event.target.name) }
 					td_edit.appendChild(editb);
@@ -96,21 +91,15 @@ function fillTable(entries) {
 	}, onFail);
 }
 
-function showEdit(sFileID) {
-	// TODO: files with an url as an id
-	var aFiles = vtrainer.getFileSelections();
-	for (var j = 0; j < aFiles.length; j++) {
-		if (aFiles[j].url == sFileID) {
-			document.getElementById("ef_url").value = aFiles[j].url;
-			document.getElementById("ef_name").value = aFiles[j].name;
-			break;
-		}
-	}
+function showEdit(sURL) {
+	var oFiles = vtrainer.getFileSelections();
+	document.getElementById("ef_url").value = sURL;
+	document.getElementById("ef_name").value = oFiles[sURL].name;
 	window.open("#page_edit_file","_self");
 }
 
 function addFile(url, name, checked) {
-	vtrainer.setFileSelection(url, checked, name);
+	vtrainer.setFile(url, checked, name);
 }
 
 function resetData() {

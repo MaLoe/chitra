@@ -41,7 +41,6 @@ var vtrainer = {
 			this.oFavs = JSON.parse(localStorage.getItem("favs"));
 
 		this.loadSettings(function() {
-			console.log("███ got back from loadSettings())");
 			vtrainer.reloadData(onSuccess); // check if the data in oData is the one for the current files and load/remove if necessary
 		});
     },
@@ -64,39 +63,43 @@ var vtrainer = {
 	reloadData: function(onSuccess) {
 		this.fInitializeCallback = onSuccess; // we are working with callbacks and that's why we have to remember this function and call it later
 		this.bDoneSettingUpLoaders = false;
-		this.nToLoadFiles = this.oSettings.asFiles.length;
+		var aURLs = Object.keys(this.oSettings.oFiles);
+		this.nToLoadFiles = aURLs.length;
 		console.log("███ loading data, number of files: " + this.nToLoadFiles);
 		// iterate over files in oData and check if they are still selected, remove if necessary
 		for (var sFileURL in this.oData) {
 			if (this.oData.hasOwnProperty(sFileURL)) {
 				var unchecked = null;
-				for (var i = 0; i < this.oSettings.asFiles.length && unchecked == null; i++)
-					if (sFileURL == this.oSettings.asFiles[i].url)
-						unchecked = !this.oSettings.asFiles[i].checked;
+				for (var sURL in this.oSettings.oFiles) {
+					if (sFileURL == sURL) {
+						unchecked = !this.oSettings.oFiles[sURL].checked;
+						break;
+					}
+				}
 
 				if (unchecked)
 					delete this.oData[sFileURL]; // remove this data because the file is unchecked
 			}
 		}
 		// start up loaders for every checked file
-		for (var i = 0; i < this.oSettings.asFiles.length; i++) {
-			var sKey = this.oSettings.asFiles[i].url; // we might have to use caching if it's a remote file and than there might be different URL in the loading process
-			if (this.oSettings.asFiles[i].checked && !this.oData.hasOwnProperty(sKey)) {
-				var sFileURL = this.oSettings.asFiles[i].url;
+		for (var sURL in this.oSettings.oFiles) {
+			if (this.oSettings.oFiles.hasOwnProperty(sURL)
+					&& this.oSettings.oFiles[sURL].checked
+					&& !this.oData.hasOwnProperty(sURL)) {
 				// check if it's internal
-				if (sFileURL.match(/^data\//)) {
-					this.loadDataFromInternal(sKey, sFileURL);
+				if (sURL.match(/^data\//)) {
+					this.loadDataFromInternal(sURL, sURL);
 				// check if it's in local filesystem
-				} else if (sFileURL.match(/^file:/)) {
-					this.loadDataFromLocalFS(sKey, sFileURL);
+				} else if (sURL.match(/^file:/)) {
+					this.loadDataFromLocalFS(sURL, sURL);
 				// check if it's in the webz
-				} else if (sFileURL.match(/^https?:/)) {
-					this.loadDataFromURL(sKey, sFileURL);
+				} else if (sURL.match(/^https?:/)) {
+					this.loadDataFromURL(sURL, sURL);
 				// something strange is in the base
 				} else {
-					console.log("█!█ skipping file, unreadable url: \"" + sFileURL + "\", left: " + (vtrainer.nToLoadFiles - 1));
+					console.log("█!█ skipping file, unreadable url: \"" + sURL + "\", left: " + (vtrainer.nToLoadFiles - 1));
 					vtrainer.signalDoneLoading(); // because the signalDoneLoading depends on the count relative to all files, we also have to signal files which we skip
-					//TODO: alert("corrupted data: unrecognized filetype: " + JSON.stringify(this.oSettings.asFiles[i]);
+					//TODO: alert("corrupted data: unrecognized filetype: " + JSON.stringify(this.oSettings.oFiles[sURL]);
 				}
 			} else {
 				console.log("███ skipping unchecked or already loaded file");
@@ -346,54 +349,61 @@ var vtrainer = {
 		console.log("███ saved settings");
 	},
 	loadSettings: function(onSuccess) {
-		console.log("███ loading settings");
+		var version = 1;
 		// try to load from persistent memory and if nothing's there, initialize it
 		if (localStorage.getItem("settings")) {
+			console.log("███ loading settings");
 			this.oSettings = JSON.parse(localStorage.getItem("settings"));
-			onSuccess();
-		} else {
-			// initialize with default settings
-			this.oSettings = {
-				asFiles: [
-					{ url : "https://raw.githubusercontent.com/MaLoe/chitra/master/vocabulary/en_numbers.xml", checked : true, name : "numbers en" }
-					// TODO: radicals
-				],
-				sAudioURL: "",
-				sMode: "to_chin",
-				nMinNextSteps: 5, // TODO
-				nMaxNextSteps: 10 // TODO
+			if (this.oSettings.nVersion == version) {
+				// settings seem to alright
+				onSuccess();
+				return;
 			}
-			// if a settings file is present, load it and overwrite values
-			window.requestFileSystem(LocalFileSystem.PERSISTENT, 0, function(fileSystem) {
-				fileSystem.root.getFile("settings.json", null, function(fileEntry) {
-					fileEntry.file(function(file) {
-						var reader = new FileReader();
-						reader.onloadend = function(evt) {
-							try {
-								var overwrites = JSON.parse(evt.target.result);
-								// overwrite settings
-								for (var setting in overwrites) {
-									if (overwrites.hasOwnProperty(setting)) {
-										vtrainer.oSettings[setting] = overwrites[setting];
-									}
-								}
-							} catch (e) {
-								vtrainer.onFail("couldn't parse settings file\n" + e);
-							}
-							onSuccess();
-						};
-						reader.onerror = function(e){
-							// settings file probably not found, let's continue with our standard settings
-							onSuccess();
-						};
-						reader.readAsText(file);
-					});
-				}, function(e){
-					// settings file probably not found
-					onSuccess();
-				});
-			}, function(e){vtrainer.onFail(e, "requestFileSystem in loadSettings() failed")});
 		}
+		console.log("███ reinitializing settings");
+		// initialize with default settings
+		this.oSettings = {
+			oFiles: {
+				"https://raw.githubusercontent.com/MaLoe/chitra/master/vocabulary/en_numbers.xml": { checked : true, name : "numbers en" }
+				// TODO: radicals
+			},
+			sAudioURL: "",
+			sMode: "to_chin",
+			nMinNextSteps: 5, // TODO
+			nMaxNextSteps: 10, // TODO
+			nVersion: version // change this to force an update/reinitialization of settings
+		}
+		// if a settings file is present, load it and overwrite values
+		window.requestFileSystem(LocalFileSystem.PERSISTENT, 0, function(fileSystem) {
+			fileSystem.root.getFile("settings.json", null, function(fileEntry) {
+				fileEntry.file(function(file) {
+					var reader = new FileReader();
+					reader.onloadend = function(evt) {
+						console.log("███ overwriting settings by file");
+						try {
+							var overwrites = JSON.parse(evt.target.result);
+							// overwrite settings
+							for (var setting in overwrites) {
+								if (overwrites.hasOwnProperty(setting)) {
+									vtrainer.oSettings[setting] = overwrites[setting];
+								}
+							}
+						} catch (e) {
+							vtrainer.onFail("couldn't parse settings file\n" + e);
+						}
+						onSuccess();
+					};
+					reader.onerror = function(e){
+						// settings file probably not found, let's continue with our standard settings
+						onSuccess();
+					};
+					reader.readAsText(file);
+				});
+			}, function(e){
+				// settings file probably not found
+				onSuccess();
+			});
+		}, function(e){vtrainer.onFail(e, "requestFileSystem in loadSettings() failed")});
 	},
 	// fail function which displays an alert
 	// TODO: print a custom message
@@ -446,34 +456,15 @@ var vtrainer = {
 		this.oSettings.sMode = sMode;
 		this.saveSettings();
 	},
-	// TODO: getFiles: return an dict of files? (it's better than getting length and the files per index later)
 	getFileSelections: function() {
-		return this.oSettings.asFiles.slice();
+		return this.oSettings.oFiles;
 	},
-	// TODO: setFile(key, ...) key should be the URL -> overwritten if present
-	// TODO: the function below should probably be refined to setFile(key, ...)
-	setFileSelection: function(sUrl, bChecked, sName) {
-		// get files array
-		var aFiles = vtrainer.oSettings.asFiles;
-		// set new value
-		var i = 0;
-		while (i < aFiles.length) {
-			if (aFiles[i].url == sUrl) {
-				break;
-			}
-			i++;
-		}
-		if (aFiles.length == i) {
-			// there are no settings for this url
-			aFiles[i] = {
-				url : sUrl,
-				name : (sName == null ? sName : "")
-			};
-		}
-		aFiles[i].checked = bChecked;
-		if (sName != null)
-			aFiles[i].name = sName;
-
+	setFileSelection: function(sUrl, bChecked) {
+		this.oSettings.oFiles[sUrl].checked = bChecked;
+		this.saveSettings();
+	},
+	setFile: function(sUrl, bChecked, sName) {
+		this.oSettings.oFiles[sUrl] = { checked: bChecked, name: sName };
 		this.saveSettings();
 	}
 };
