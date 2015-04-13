@@ -109,7 +109,7 @@ function displaySettings (id) {
 	tableref.appendChild(tbdy);
 }
 
-// Switch to settings on menu key
+// open panel on menu key
 function onMenuKeyDown () {
-	window.open("settings.html", "_self");
+	$("#panel_menu").panel("toggle");
 }

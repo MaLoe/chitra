@@ -3,63 +3,67 @@
     License TODO
 -->
 <html>
-	<head>
-		<meta charset="utf-8" />
-		<meta name="format-detection" content="telephone=no" />
-		<!-- WARNING: for iOS 7, remove the width=device-width and height=device-height attributes. See https://issues.apache.org/jira/browse/CB-4323 -->
-		<meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height, target-densitydpi=medium-dpi" />
-		<link rel="stylesheet" type="text/css" href="css/index.css" />
-		<title>ChiTra</title>
-	</head>
-	<body>
-		<table>
-			<tr height="35%">
-				<td colspan="2" rowspan="2" class="content_hanzi">
-					<p id="text_vocable">你们好！</p>
-				</td>
-				<td colspan="2" class="content_pinyin">
-					<p id="text_pronunciation">nǐmen hǎo!</p>
-				</td>
-			</tr>
-			<tr height="15%">
-				<td colspan="2" class="content_comment">
-					<p id="text_comment">Redewendung</p>
-					<button id="settings_b" type="button" class="button_std" value="Settings" onclick="window.open('settings.html', '_self')"
-						style="background-image:url('img/gear.png')"/>
-					<button id="info_b" type="button" class="button_std" value="Info" onclick="window.open('info.html', '_self')"
-						style="background-image:url('img/info.png')"/>
-				</td>
-			</tr>
-			<tr>
-				<td>
-					<button id="fav_b" type="button" class="button_std" value="Favorite" onclick="toggleFav()"
-						style="background-image:url('img/star_nofav.png')"/>
-				</td>
-				<td colspan="2" rowspan="2" class="content_translation">
-					<p id="text_translation">Hallo ihr!</p>
-				</td>
-				<td>
-					<button id="show_b" type="button" class="button_std" value="Show" onclick="show()"
-						style="background-image:url('img/eye.png')"/>
-				</td>
-			</tr>
-			<tr>
-				<td>
-					<button id="audio_b" type="button" class="button_std" value="Audio" onclick="playAudio()"
-						style="background-image:url('img/speaker.png')"/>
-				</td>
-				<td>
-					<button id="next_b" type="button" class="button_std" value="Next" onclick="next()"
-						style="background-image:url('img/rarrow.png')"/>
-				</td>
-			</tr>
-		</table>
+<head>
+	<meta charset="utf-8" />
+	<meta name="format-detection" content="telephone=no" />
+	<!-- WARNING: for iOS 7, remove the width=device-width and height=device-height attributes. See https://issues.apache.org/jira/browse/CB-4323 -->
+	<meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height, target-densitydpi=medium-dpi" />
+	<link rel="stylesheet" type="text/css" href="css/index.css" />
+	<title>ChiTra</title>
 
-		<script type="text/javascript" src="cordova.js"></script>
-		<script type="text/javascript" src="js/index.js"></script>
-		<script type="text/javascript" src="js/vtrainer.js"></script>
-		<script type="text/javascript">
-			initialize();
-		</script>
-    </body>
+	<link rel="stylesheet" href="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.css" />
+	<script src="http://code.jquery.com/jquery-2.1.3.min.js"></script>
+	<script src="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script>
+	<script id="panel-init">$(function(){$("body>[data-role='panel']").panel();});</script>
+</head>
+<body>
+	<div data-role="panel" id="panel_menu" data-position="left" data-display="overlay" data-theme="a">
+		<input type="button" value="Trainer" onclick="window.open('index.html', '_self');"><br>
+		<input type="button" value="Settings" onclick="window.open('settings.html', '_self');"><br>
+		<input type="button" value="Info" onclick="window.open('info.html', '_self');"><br>
+		<!-- TODO: about -->
+	</div>
+
+	<div data-role="page" id="mainpage">
+		<div class="content_vocable_ls">
+			<div id="content_vocable">你们好！</div>
+		</div>
+		<div class="content_pronunciation_ls">
+			<div id="content_pronunciation">nǐmen hǎo!</div>
+		</div>
+		<div class="content_comment_ls">
+			<div id="content_comment">Redewendung</div>
+		</div>
+		<div class="content_translation_ls">
+			<div id="content_translation">Hallo ihr!</div>
+		</div>
+
+		<div class="button_panel_ls">
+			<a class="ui-link ui-btn-right ui-btn ui-shadow ui-corner-all" href="#panel_menu">三</a>
+		</div>
+		<div class="button_fav_ls">
+			<button id="fav_b" type="button" class="button_std" value="Favorite"
+				onclick="toggleFav()" style="background-image:url('img/star_nofav.png')"/>
+		</div>
+		<div class="button_audio_ls">
+			<button id="audio_b" type="button" class="button_std" value="Audio"
+				onclick="playAudio()" style="background-image:url('img/speaker.png')"/>
+		</div>
+		<div class="button_show_ls">
+			<button id="show_b" type="button" class="button_std" value="Show"
+				onclick="show()" style="background-image:url('img/eye.png')"/>
+		</div>
+		<div class="button_next_ls">
+			<button id="next_b" type="button" class="button_std" value="Next"
+				onclick="next()" style="background-image:url('img/rarrow.png')" disabled />
+		</div>
+	</div>
+
+	<script type="text/javascript" src="cordova.js"></script>
+	<script type="text/javascript" src="js/index.js"></script>
+	<script type="text/javascript" src="js/vtrainer.js"></script>
+	<script type="text/javascript">
+		initialize();
+	</script>
+</body>
 </html>

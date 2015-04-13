@@ -11,61 +11,96 @@ body {
 	-webkit-text-size-adjust: none;             /* prevent webkit from resizing text to fit */
 	-webkit-user-select: none;                  /* prevent copy paste, to allow, change 'none' to 'text' */
 
-    background-color:#999999;
+	background-color:#999999;
 	font-size:16px;
 	margin:0px;
 	padding:0px;
 	height:100%;
 	width:100%;
-	//position:absolute;             /* position in the center of the screen */
 }
 
-table {
-	width:100%;
-	height:100%;
-	//left:0;
-	//right:100%;
-	//top:0;
-	//bottom:100%;
-	text-align:center; 
-	vertical-align:middle;
-	padding:1%;
+/* general content styling */
+
+#content_vocable, #content_pronunciation, #content_translation, #content_comment {
+	/* center horizontally and vertically */
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	-webkit-transform: translate(-50%, -50%);
+}
+#content_vocable {
+	font-size: 200%;
+}
+#content_pronunciation {
+	font-size: 130%;
 }
 
-.content_hanzi {
-    background-color:#EEEEEE;
-	//border: 1px solid grey;
-	font-size:200%;
-	border-radius:10px;
+/* content positioning */
+
+div[class^="content_"], div[class^="button_"] {
+	/* make all UI elements absolute so that we could change the layout by
+	 * switching classes. Landscape layout is defined by _ls classes. */
+	position: absolute;
+}
+.content_vocable_ls {
+	width: 50%;
+	height: 50%;
+	left: 0%;
+	top: 0%;
+}
+.content_pronunciation_ls {
+	width: 50%;
+	height: 30%;
+	left: 50%;
+	top: 0%;
+}
+.content_comment_ls {
+	width: 40%;
+	height: 20%;
+	left: 50%;
+	top: 30%;
+}
+.content_translation_ls {
+	width: 60%;
+	height: 50%;
+	left: 20%;
+	top: 50%;
 }
 
-.content_pinyin {
-    background-color:#EEEEEE;
-	//border: 1px solid grey;
-	font-size:130%;
-	border-radius:10px;
-}
+/* button positioning and styling */
 
-.content_comment {
+div[class^="button_"] {
+	width: 20%;
+	height: 25%;
 }
-
-.content_translation {
-    background-color:#EEEEEE;
-	width:70%;
-	//border: 1px solid grey;
-	border-radius:10px;
-}
-
 .button_std {
-	color: #FFF;
-	background-color: #555;
-	font-weight: bold;
+	/* make buttons 100% of their div and have the proper icon display */
 	height:100%;
-	width:3cm;
-	font-size: 150%;
+	width:100%;
 	background-size:contain;
 	background-repeat:no-repeat;
 	background-position:center;
-	border-radius:10px;
-	// TODO size isn't quite right
+}
+.button_fav_ls {
+	bottom: 25%;
+	left: 0;
+}
+.button_next_ls {
+	bottom: 0;
+	right: 0;
+}
+.button_show_ls {
+	bottom: 25%;
+	right: 0;
+}
+.button_audio_ls {
+	bottom: 0;
+	left: 0;
+}
+.button_panel_ls {
+	width: 10% !important;
+	height: 20% !important;
+	right: 0;
+	bottom: 50%;
 }

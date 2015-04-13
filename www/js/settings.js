@@ -8,6 +8,7 @@ function initialize () {
 }
 
 function onDeviceReady () {
+	document.addEventListener("menubutton", onMenuKeyDown, false);
 	// Initialize vocable trainer
 	vtrainer.initialize(function () {
 		document.getElementById("select_mode").value = vtrainer.getMode();
@@ -117,6 +118,11 @@ function resetData() {
 	location.reload();
 }
 
+// open panel on menu key
+function onMenuKeyDown () {
+	$("#panel_menu").panel("toggle");
+}
+
 function onFail(error, msg) {
 	if (!msg)
 		msg = "Error" + JSON.stringify(error);
@@ -127,7 +133,7 @@ function onFail(error, msg) {
 	else
 		alert(msg);
 	/*console.log("███ fail :(");
-    //alert("Failed while reading data files: " + error.code);
+	//alert("Failed while reading data files: " + error.code);
 	var tableref = document.getElementById("tDataFiles");
 	var tbdy = document.createElement("tbody");
 	var tr = document.createElement("tr");

@@ -12,12 +12,12 @@ function onDeviceReady () {
 	document.addEventListener("menubutton", onMenuKeyDown, false);
 	// Initialize vocable trainer
 	vtrainer.initialize(function () {
-		// TODO activate next button
+		document.getElementById("next_b").disabled = false;
 	});
 }
 
 function toggleFav () {
-	var vocable = document.getElementById("text_vocable").innerHTML;
+	var vocable = document.getElementById("content_vocable").innerHTML;
 	if(vtrainer.toggleFav(vocable)) {
 		// the current vocable was set to favorite
 		document.getElementById("fav_b").style.backgroundImage = "url('img/star_fav.png')";
@@ -31,18 +31,18 @@ function toggleFav () {
 function show () {
 	vtrainer.show();
 	// show current element
-	document.getElementById("text_vocable").style.visibility = "visible";
-	document.getElementById("text_pronunciation").style.visibility = "visible";
-	document.getElementById("text_translation").style.visibility = "visible";
-	document.getElementById("text_comment").style.visibility = "visible";
+	document.getElementById("content_vocable").style.visibility = "visible";
+	document.getElementById("content_pronunciation").style.visibility = "visible";
+	document.getElementById("content_translation").style.visibility = "visible";
+	document.getElementById("content_comment").style.visibility = "visible";
 }
 
 function next () {
 	// hide everything
-	document.getElementById("text_vocable").style.visibility = "hidden";
-	document.getElementById("text_pronunciation").style.visibility = "hidden";
-	document.getElementById("text_translation").style.visibility = "hidden";
-	document.getElementById("text_comment").style.visibility = "hidden";
+	document.getElementById("content_vocable").style.visibility = "hidden";
+	document.getElementById("content_pronunciation").style.visibility = "hidden";
+	document.getElementById("content_translation").style.visibility = "hidden";
+	document.getElementById("content_comment").style.visibility = "hidden";
 
 	// get a new (different than current) element
 	vtrainer.next();
@@ -54,21 +54,21 @@ function next () {
 		document.getElementById("fav_b").style.backgroundImage = "url('img/star_nofav.png')";
 
 	// update data
-	document.getElementById("text_vocable").innerHTML = vtrainer.getCurrentVocable();
-	document.getElementById("text_pronunciation").innerHTML = vtrainer.getCurrentPronunciation();
-	document.getElementById("text_translation").innerHTML = vtrainer.getCurrentTranslation();
-	document.getElementById("text_comment").innerHTML = vtrainer.getCurrentComment();
+	document.getElementById("content_vocable").innerHTML = vtrainer.getCurrentVocable();
+	document.getElementById("content_pronunciation").innerHTML = vtrainer.getCurrentPronunciation();
+	document.getElementById("content_translation").innerHTML = vtrainer.getCurrentTranslation();
+	document.getElementById("content_comment").innerHTML = vtrainer.getCurrentComment();
 	// show stuff according to current mode
 	// TODO: is it possible to use vtrainer.CONST?
 	switch(vtrainer.getMode()) {
 		case "to_trans":
-			document.getElementById("text_translation").style.visibility = "visible";
+			document.getElementById("content_translation").style.visibility = "visible";
 			break;
 		case "audio":
 			vtrainer.playAudio();
 			break;
 		default:
-			document.getElementById("text_vocable").style.visibility = "visible";
+			document.getElementById("content_vocable").style.visibility = "visible";
 	}
 }
 
@@ -76,9 +76,9 @@ function playAudio () {
 	vtrainer.playAudio();
 }
 
-// switch to settings on menu key
+// open panel on menu key
 function onMenuKeyDown () {
-	window.open("settings.html", "_self");
+	$("#panel_menu").panel("toggle");
 }
 
 // fail function which displaces an alert

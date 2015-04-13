@@ -11,66 +11,92 @@
 	<link rel="stylesheet" type="text/css" href="css/settings.css" />
 	<title>ChiTra Settings</title>
 
-	<link rel="stylesheet" href="http://code.jquery.com/mobile/1.2.0-beta.1/jquery.mobile-1.2.0-beta.1.min.css" />
-	<script src="http://code.jquery.com/jquery-1.8.1.min.js"></script>
-	<script src="http://code.jquery.com/mobile/1.2.0-beta.1/jquery.mobile-1.2.0-beta.1.min.js"></script>
-
-	<script src="js/settings.js" type="text/javascript"></script>
+	<link rel="stylesheet" href="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.css" />
+	<script src="http://code.jquery.com/jquery-2.1.3.min.js"></script>
+	<script src="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script>
+	<script id="panel-init">$(function(){$("body>[data-role='panel']").panel();});</script>
 </head>
 <body>
+	<div data-role="panel" id="panel_menu" data-position="left" data-display="overlay" data-theme="a">
+		<input type="button" value="Trainer" onclick="window.open('index.html', '_self');"><br>
+		<input type="button" value="Settings" onclick="window.open('settings.html', '_self');"><br>
+		<input type="button" value="Info" onclick="window.open('info.html', '_self');"><br>
+		<!-- TODO: about -->
+	</div>
+
 	<div data-role="page" id="mainpage">
 		<!--TODOfont size: <select name="select_font" size="1">
 		</select>-->
-		<br>
-			mode: <select id="select_mode" size="1" onchange="vtrainer.setMode(this.options[this.selectedIndex].value);">
-				<option value="to_trans">from chinese</option>
-				<option value="to_chin">to chinese</option>
-				<option value="audio">audio</option>
-			</select>
-		<br>
-			TTS server: <input id="tts_server" type="text" value="" onchange="vtrainer.setTTSServerURL(this.value);">
-		<br>
+		<div data-role="header">
+			<a href="#panel_menu">三</a>
+			<h1>Settings</h1>
+		</div>
 
-		<!-- TODO: <label><input type="checkbox" value="check_input" />input required</label>-->
-		<table>
-			<tr>
-				<!-- TODO: reset data should have an "are you sure" dialoge -->
-				<td><input type="button" value="reset data" onclick="resetData();"></td>
-				<td><input type="button" value="info" onclick="window.open('info.html', '_self');"></td>
-				<td><input type="button" value="add file" onclick="window.open('#page_add_file','_self');"></td>
-			</tr>
-		</table>
+		<div role="main">
+			<br>
+				mode: <select id="select_mode" size="1" onchange="vtrainer.setMode(this.options[this.selectedIndex].value);">
+					<option value="to_trans">from chinese</option>
+					<option value="to_chin">to chinese</option>
+					<option value="audio">audio</option>
+				</select>
+			<br>
+				TTS server: <input id="tts_server" type="text" value="" onchange="vtrainer.setTTSServerURL(this.value);">
+			<br>
 
-		<hr>
-		<!-- TODO: display a loading screen while the table is loading (or not?)-->
-		<div id="divDataFiles">
+			<!-- TODO: <label><input type="checkbox" value="check_input" />input required</label>-->
+			<table>
+				<tr>
+					<!-- TODO: reset data should have a page with checkboxes -> cache, settings etc. -->
+					<td><input type="button" value="reset data" onclick="resetData();"></td>
+					<td><input type="button" value="add file" onclick="window.open('#page_add_file','_self');"></td>
+				</tr>
+			</table>
+
+			<hr>
+			<!-- TODO: display a loading screen while the table is loading (or not?)-->
+			<div id="divDataFiles"></div>
 		</div>
 	</div>
+
 	<div data-role="page" id="page_add_file">
-		<form name="add_file" onsubmit="addFile(this.url.value, this.name.value, false);">
-			<h1>add file</h1>
-			<!-- TODO: intermediate page -> url or file and a file dialog -->
-			<label for="af_name">name: </label>
-			<input type="text" id="af_name" name="name" value="">
-			<label for="af_url">URL: </label>
-			<input type="text" id="af_url" name="url" value="">
-			<input type="submit" value="Add">
-			<input type="button" value="Cancel" onclick="window.open('#mainpage','_self');">
-		</form>
+		<div data-role="header">
+			<a href="#panel_menu">三</a>
+			<h1>Add file</h1>
+		</div>
+
+		<div role="main">
+			<form name="add_file" onsubmit="addFile(this.url.value, this.name.value, false);">
+				<!-- TODO: intermediate page -> url or file and a file dialog -->
+				<label for="af_name">name: </label>
+				<input type="text" id="af_name" name="name" value="">
+				<label for="af_url">URL: </label>
+				<input type="text" id="af_url" name="url" value="">
+				<input type="submit" value="Add">
+				<input type="button" value="Cancel" onclick="window.open('#mainpage','_self');">
+			</form>
+		</div>
 	</div>
+
 	<div data-role="page" id="page_edit_file">
-		<h1>Edit file</h1>
-		<!-- TODO -->
-		<label for="ef_name">name: </label>
-		<input type="text" id="ef_name" name="name" value="">
-		<label for="ef_url">URL: </label>
-		<input type="text" id="ef_url" name="url" value="">
-		<input type="button" value="Save" onclick="">
-		<input type="button" value="Delete" onclick="">
-		<input type="button" value="Cancel" onclick="window.open('#mainpage','_self');">
+		<div data-role="header">
+			<a href="#panel_menu">三</a>
+			<h1>Edit file</h1>
+		</div>
+
+		<div role="main">
+			<!-- TODO -->
+			<label for="ef_name">name: </label>
+			<input type="text" id="ef_name" name="name" value="">
+			<label for="ef_url">URL: </label>
+			<input type="text" id="ef_url" name="url" value="">
+			<input type="button" value="Save" onclick="">
+			<input type="button" value="Delete" onclick="">
+			<input type="button" value="Cancel" onclick="window.open('#mainpage','_self');">
+		</div>
 	</div>
 
 	<script type="text/javascript" src="cordova.js"></script>
+	<script type="text/javascript" src="js/settings.js"></script>
 	<script type="text/javascript" src="js/vtrainer.js"></script>
 	<script type="text/javascript">
 		initialize();
