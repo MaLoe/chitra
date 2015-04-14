@@ -296,7 +296,7 @@ var vtrainer = {
 		if (!this.aAudioBuffer[hanzi]) {
 			if (this.getTTSServerURL()) {
 				// load the audio
-				console.log("loading audio...");
+				console.log("███ loading audio...");
 				var url = this.getTTSServerURL() + hanzi;
 
 				window.requestFileSystem(LocalFileSystem.PERSISTENT, 0, function(fileSystem) {

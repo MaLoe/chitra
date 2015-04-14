@@ -11,8 +11,7 @@ body {
 	-webkit-text-size-adjust: none;             /* prevent webkit from resizing text to fit */
 	-webkit-user-select: none;                  /* prevent copy paste, to allow, change 'none' to 'text' */
 
-	background-color:#999999;
-	font-size:16px;
+	position:absolute;
 	margin:0px;
 	padding:0px;
 	height:100%;
@@ -21,6 +20,13 @@ body {
 
 /* general content styling */
 
+div[class^="content_"] {
+}
+.highlited_textarea {
+	height: 100%;
+	width: 100%;
+	background: #ffffff;
+}
 #content_vocable, #content_pronunciation, #content_translation, #content_comment {
 	/* center horizontally and vertically */
 	position: absolute;
@@ -36,9 +42,12 @@ body {
 	font-size: 130%;
 }
 
-/* content positioning */
+/* content positioning and styling */
 
 div[class^="content_"], div[class^="button_"] {
+	background: #dddddd;
+	padding: 5px;
+	box-sizing: border-box;
 	/* make all UI elements absolute so that we could change the layout by
 	 * switching classes. Landscape layout is defined by _ls classes. */
 	position: absolute;
@@ -81,6 +90,7 @@ div[class^="button_"] {
 	background-size:contain;
 	background-repeat:no-repeat;
 	background-position:center;
+	margin: 0 !important;
 }
 .button_fav_ls {
 	bottom: 25%;

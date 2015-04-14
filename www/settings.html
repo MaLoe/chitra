@@ -15,12 +15,16 @@
 	<script src="http://code.jquery.com/jquery-2.1.3.min.js"></script>
 	<script src="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script>
 	<script id="panel-init">$(function(){$("body>[data-role='panel']").panel();});</script>
+
+	<script type="text/javascript" src="cordova.js"></script>
+	<script type="text/javascript" src="js/settings.js"></script>
+	<script type="text/javascript" src="js/vtrainer.js"></script>
 </head>
-<body>
+<body onload="initialize();">
 	<div data-role="panel" id="panel_menu" data-position="left" data-display="overlay" data-theme="a">
-		<input type="button" value="Trainer" onclick="window.open('index.html', '_self');"><br>
-		<input type="button" value="Settings" onclick="window.open('settings.html', '_self');"><br>
-		<input type="button" value="Info" onclick="window.open('info.html', '_self');"><br>
+		<a href="index.html" data-ajax="false" class="ui-btn ui-corner-all">Trainer</a>
+		<a href="settings.html" data-ajax="false" class="ui-btn ui-corner-all">Settings</a>
+		<a href="info.html" data-ajax="false" class="ui-btn ui-corner-all">Info</a>
 		<!-- TODO: about -->
 	</div>
 
@@ -94,12 +98,5 @@
 			<input type="button" value="Cancel" onclick="window.open('#mainpage','_self');">
 		</div>
 	</div>
-
-	<script type="text/javascript" src="cordova.js"></script>
-	<script type="text/javascript" src="js/settings.js"></script>
-	<script type="text/javascript" src="js/vtrainer.js"></script>
-	<script type="text/javascript">
-		initialize();
-	</script>
 </body>
 </html>

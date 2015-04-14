@@ -15,30 +15,40 @@
 	<script src="http://code.jquery.com/jquery-2.1.3.min.js"></script>
 	<script src="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script>
 	<script id="panel-init">$(function(){$("body>[data-role='panel']").panel();});</script>
+
+	<script type="text/javascript" src="cordova.js"></script>
+	<script type="text/javascript" src="js/index.js"></script>
+	<script type="text/javascript" src="js/vtrainer.js"></script>
 </head>
-<body>
+<body onload="initialize();">
 	<div data-role="panel" id="panel_menu" data-position="left" data-display="overlay" data-theme="a">
-		<input type="button" value="Trainer" onclick="window.open('index.html', '_self');"><br>
-		<input type="button" value="Settings" onclick="window.open('settings.html', '_self');"><br>
-		<input type="button" value="Info" onclick="window.open('info.html', '_self');"><br>
+		<a href="index.html" data-ajax="false" class="ui-btn ui-corner-all">Trainer</a>
+		<a href="settings.html" data-ajax="false" class="ui-btn ui-corner-all">Settings</a>
+		<a href="info.html" data-ajax="false" class="ui-btn ui-corner-all">Info</a>
 		<!-- TODO: about -->
 	</div>
 
 	<div data-role="page" id="mainpage">
 		<div class="content_vocable_ls">
-			<div id="content_vocable">你们好！</div>
+			<div class="highlited_textarea ui-corner-all">
+				<div id="content_vocable">vocable</div>
+			</div>
 		</div>
 		<div class="content_pronunciation_ls">
-			<div id="content_pronunciation">nǐmen hǎo!</div>
+			<div class="highlited_textarea ui-corner-all">
+				<div id="content_pronunciation">pronunciation</div>
+			</div>
 		</div>
 		<div class="content_comment_ls">
-			<div id="content_comment">Redewendung</div>
+			<div id="content_comment">comment</div>
 		</div>
 		<div class="content_translation_ls">
-			<div id="content_translation">Hallo ihr!</div>
+			<div class="highlited_textarea ui-corner-all">
+				<div id="content_translation">This is like learning with cards, press the arrow for the next vocable, the eye to view the hidden information, the speaker for TTS and the star to make the vocable a favorite, which will appear more frequently.</div>
+			</div>
 		</div>
 
-		<div class="button_panel_ls">
+		<div class="button_panel_ls content_dummy">
 			<a class="ui-link ui-btn-right ui-btn ui-shadow ui-corner-all" href="#panel_menu">三</a>
 		</div>
 		<div class="button_fav_ls">
@@ -58,12 +68,5 @@
 				onclick="next()" style="background-image:url('img/rarrow.png')" disabled />
 		</div>
 	</div>
-
-	<script type="text/javascript" src="cordova.js"></script>
-	<script type="text/javascript" src="js/index.js"></script>
-	<script type="text/javascript" src="js/vtrainer.js"></script>
-	<script type="text/javascript">
-		initialize();
-	</script>
 </body>
 </html>
