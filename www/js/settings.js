@@ -37,65 +37,49 @@ function fillTable(entries) {
 						oFiles = vtrainer.getFileSelections();
 					}
 				}
-				// fill table
-				var table = document.createElement("table");
-				table.style.width = "100%";
-
-				var tbdy = document.createElement("tbody");
-
+				// create list of checkboxes with labels
+				var chckblist = document.createElement("fieldset");
+				$(chckblist).data("role", "controlgroup");
+				var legend = document.createElement("legend");
+				$(legend).append("Files:");
+				$(chckblist).append(legend);
+				// fill list
 				for (var sURL in oFiles) {
 					// TODO: dont display files here which are not present
 					if (!(sURL in oPresentFiles) && sURL.indexOf("TODO") != -1)
 						continue;
-
-					var tr = document.createElement("tr");
 					// selection checkbox
-					var td_chck = document.createElement("td");
 					var chckb = document.createElement("input");
 					chckb.type = "checkbox";
-					chckb.value = sURL;
+					chckb.name = sURL;
 					chckb.checked = oFiles[sURL].checked;
 					chckb.onclick = function (event) {
-						vtrainer.setFileSelection(event.target.value, event.target.checked)
+						vtrainer.setFileSelection(event.target.name, event.target.checked)
 					}
-					td_chck.appendChild(chckb);
-					td_chck.width = "100";
-					tr.appendChild(td_chck);
-					// filename column
-					var td_filename = document.createElement("td");
-					var name = oFiles[sURL].name;
-					if (name == "")
-						name = sURL.substring(sURL.lastIndexOf('/') + 1);
-					td_filename.appendChild(document.createTextNode(name));
-					tr.appendChild(td_filename);
-					// edit button TODO: this is only temporary, this should be done by a press&hold
-					// mousedown -> timer setzen -> bei mouseup timer canceln, nach timer -> editshow
-					// -> auf die row betreffend, bzw touchstart&touchend
-					var td_edit = document.createElement("td");
-					td_edit.style.textAlign = "right";
-					var editb = document.createElement("input");
-					editb.type = "button";
-					editb.name = sURL;
-					editb.value = "E"; // TODO icon & delete button
-					editb.onclick = function (event) { showEdit(event.target.name) }
-					td_edit.appendChild(editb);
-					td_edit.width = "100";
-					tr.appendChild(td_edit);
-					// append row
-					tbdy.appendChild(tr);
+					// label
+					var label = document.createElement("label");
+					var sLabel = oFiles[sURL].name;
+					if (sLabel == "")
+						sLabel = sURL.substring(sURL.lastIndexOf('/') + 1);
+					// bind longpress event to this row -> showEdit()
+					$(label).data("url", sURL);
+					$(label).bind("taphold", showEdit);
+					// append to list
+					$(label).append(chckb, sLabel);
+					$(chckblist).append(label);
 				}
-				table.appendChild(tbdy);
-				document.getElementById("divDataFiles").innerHTML = "";
-				document.getElementById("divDataFiles").appendChild(table);
+				// replace div's html and trigger jquery styling
+				$("#divDataFiles").html(chckblist);
+				$(chckblist).trigger("create");
 			}, onFail);
 		}, onFail);
 	}, onFail);
 }
 
-function showEdit(sURL) {
+function showEdit(event) {
 	var oFiles = vtrainer.getFileSelections();
-	document.getElementById("ef_url").value = sURL;
-	document.getElementById("ef_name").value = oFiles[sURL].name;
+	document.getElementById("ef_url").value = $(this).data("url");
+	document.getElementById("ef_name").value = oFiles[$(this).data("url")].name;
 	window.open("#page_edit_file","_self");
 }
 
