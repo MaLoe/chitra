@@ -38,6 +38,10 @@ function show () {
 }
 
 function next () {
+	// enable buttons
+	document.getElementById("fav_b").disabled = false;
+	document.getElementById("show_b").disabled = false;
+	document.getElementById("audio_b").disabled = false;
 	// hide everything
 	document.getElementById("content_vocable").style.visibility = "hidden";
 	document.getElementById("content_pronunciation").style.visibility = "hidden";
@@ -62,13 +66,13 @@ function next () {
 	// TODO: is it possible to use vtrainer.CONST?
 	switch(vtrainer.getMode()) {
 		case "to_trans":
-			document.getElementById("content_translation").style.visibility = "visible";
+			document.getElementById("content_vocable").style.visibility = "visible";
 			break;
 		case "audio":
 			vtrainer.playAudio();
 			break;
 		default:
-			document.getElementById("content_vocable").style.visibility = "visible";
+			document.getElementById("content_translation").style.visibility = "visible";
 	}
 }
 
