@@ -20,20 +20,19 @@ body {
 
 /* general content styling */
 
-div[class^="content_"] {
-}
 .highlited_textarea {
 	height: 100%;
 	width: 100%;
 	background: #ffffff;
 }
 #content_vocable, #content_pronunciation, #content_translation, #content_comment {
-	/* center horizontally and vertically */
-	position: absolute;
+	text-align: center;
+	width: 100%;
+	/* center vertically */
+	position: relative;
 	top: 50%;
-	left: 50%;
-	transform: translate(-50%, -50%);
-	-webkit-transform: translate(-50%, -50%);
+	transform: translate(0%, -50%);
+	-webkit-transform: translate(0%, -50%);
 }
 #content_vocable {
 	font-size: 200%;
