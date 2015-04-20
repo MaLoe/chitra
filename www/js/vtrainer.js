@@ -165,7 +165,12 @@ var vtrainer = {
 						console.log("███ not cached, downloading " + sFileURL + " to " + sCachedFilePath);
 						vtrainer.downloadFile(sFileURL, sCachedFilePath, function (url, out) {
 							vtrainer.loadDataFromLocalFS(sKey, sCachedFilePath);
-						}, function(e){});
+						}, function(e){
+							vtrainer.onFail(
+								e, "couldn't download \"" + e.source + "\":\nerror code: " + e.code
+								+ "\nhttp status: " + e.http_status
+							);
+						});
 					});
 				}, function(e){vtrainer.onFail(e, "getDirectory(\"cache/data\") in loadDataFromURL(\"" + sFileURL + "\") failed")});
 			}, function(e){vtrainer.onFail(e, "getDirectory(\"cache\") in loadDataFromURL(\"" + sFileURL + "\") failed")});
@@ -308,7 +313,12 @@ var vtrainer = {
 								audio = new Media(sCachedFilePath);
 								vtrainer.aAudioBuffer[hanzi] = audio;
 								audio.play();
-							}, function(e){});
+							}, function(e){
+								vtrainer.onFail(
+									e, "couldn't download \"" + e.source + "\":\nerror code: " + e.code
+									+ "\nhttp status: " + e.http_status
+								);
+							});
 						}, function(e){vtrainer.onFail(e, "getDirectory(\"cache/audio\") in playAudio(\"" + hanzi + "\") failed")});
 					}, function(e){vtrainer.onFail(e, "getDirectory(\"cache\") in playAudio(\"" + hanzi + "\") failed")});
 				}, function(e){vtrainer.onFail(e, "requestFileSystem in playAudio(\"" + hanzi + "\") failed")});
@@ -331,12 +341,7 @@ var vtrainer = {
 				console.log("download complete: " + entry.fullPath);
 				onSuccess(sURL, sOutPath);
 			},
-			function(error) {
-				console.log("download error source " + error.source);
-				console.log("download error target " + error.target);
-				console.log("download error code " + error.code);
-				onFail(sURL, sOutPath);
-			},
+			onFail,
 			false,
 			{
 				headers: {
@@ -368,7 +373,7 @@ var vtrainer = {
 				// TODO: radicals
 			},
 			sAudioURL: "",
-			sMode: "to_chin",
+			sMode: "to_trans",
 			nMinNextSteps: 5, // TODO
 			nMaxNextSteps: 10, // TODO
 			nVersion: version // change this to force an update/reinitialization of settings
@@ -406,11 +411,10 @@ var vtrainer = {
 		}, function(e){vtrainer.onFail(e, "requestFileSystem in loadSettings() failed")});
 	},
 	// fail function which displays an alert
-	// TODO: print a custom message
 	onFail: function(error, msg) {
-		if (!msg)
-			msg = "Error:";
-		msg += " " + JSON.stringify(error);
+		var msg = msg ? msg : "Error:";
+		// TODO: do this only if debug or if msg undefined
+		msg += "\n\n" + JSON.stringify(error, null, "  ");
 
 		if (navigator.notification)
 			navigator.notification.alert(msg, null, Error, 'OK');
@@ -419,6 +423,11 @@ var vtrainer = {
 	},
 
 	// ███████████████ getter/setter ██████████████████████████████████████████████████████████████████████
+	getDir: function(onSuccess) {
+		// TODO: get main directory -> data/org.chitra or sdcard/org.chitra?
+		// TODO: replace all calls to getRootDir
+		return null;
+	},
 	// vocable related
 	getCurrentPronunciation: function() {
 		return this.oCurrentHanzi.pronunciation;

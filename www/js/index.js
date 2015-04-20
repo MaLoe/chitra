@@ -65,14 +65,15 @@ function next () {
 	// show stuff according to current mode
 	// TODO: is it possible to use vtrainer.CONST?
 	switch(vtrainer.getMode()) {
-		case "to_trans":
-			document.getElementById("content_vocable").style.visibility = "visible";
+		case "to_vocable":
+			document.getElementById("content_translation").style.visibility = "visible";
+			document.getElementById("content_comment").style.visibility = "visible";
 			break;
 		case "audio":
 			vtrainer.playAudio();
 			break;
 		default:
-			document.getElementById("content_translation").style.visibility = "visible";
+			document.getElementById("content_vocable").style.visibility = "visible";
 	}
 }
 
