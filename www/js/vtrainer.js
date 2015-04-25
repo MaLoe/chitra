@@ -112,30 +112,34 @@ var vtrainer = {
 	// loads all data from specified XML and pushes them into the array containing all data
 	loadXML: function(sKey, xmlDoc) {
 		console.log("███ parsing XML: " + sKey);
-		var xmlEntries = xmlDoc.getElementsByTagName("entry");
-		// go through every element of this DOM and push them into the array
 		var aVocabulary = [];
-		for (var i = 0; i < xmlEntries.length; i++) {
-			// comment might be absent, handle this
-			var xmlElementComment = xmlEntries[i].getElementsByTagName("comment");
-			if (xmlElementComment.length < 1)
-				var temp_comment = "";
-			else
-				var temp_comment = xmlElementComment[0].childNodes[0].nodeValue;
+		try {
+			var xmlEntries = xmlDoc.getElementsByTagName("entry");
+			// go through every element of this DOM and push them into the array
+			for (var i = 0; i < xmlEntries.length; i++) {
+				// comment might be absent, handle this
+				var xmlElementComment = xmlEntries[i].getElementsByTagName("comment");
+				if (xmlElementComment.length < 1)
+					var temp_comment = "";
+				else
+					var temp_comment = xmlElementComment[0].childNodes[0].nodeValue;
 
-			var element = {
-				vocable       : xmlEntries[i].getElementsByTagName("vocable")[0].childNodes[0].nodeValue,
-				pronunciation : xmlEntries[i].getElementsByTagName("pronunciation")[0].childNodes[0].nodeValue,
-				translation   : xmlEntries[i].getElementsByTagName("translation")[0].childNodes[0].nodeValue,
-				comment       : temp_comment,
-				occurrences   : 0,
-				shown         : 0,
-				favorite      : false
+				var element = {
+					vocable       : xmlEntries[i].getElementsByTagName("vocable")[0].childNodes[0].nodeValue,
+					pronunciation : xmlEntries[i].getElementsByTagName("pronunciation")[0].childNodes[0].nodeValue,
+					translation   : xmlEntries[i].getElementsByTagName("translation")[0].childNodes[0].nodeValue,
+					comment       : temp_comment,
+					occurrences   : 0,
+					shown         : 0,
+					favorite      : false
+				}
+				aVocabulary.push(element);
 			}
-			aVocabulary.push(element);
+			console.log("███ parsed XML, entries: " + xmlEntries.length);
+		} catch (e) {
+			vtrainer.onFail("couldn't parse XML \"" + sKey + "\":\n" + e);
 		}
 		this.oData[sKey] = aVocabulary;
-		console.log("███ parsed XML, entries: " + xmlEntries.length);
 	},
 
 	//! load data from URL. This is a callback, no return value possible.
