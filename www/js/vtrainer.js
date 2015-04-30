@@ -18,8 +18,6 @@ String.prototype.hashCode = function() {
 	return hash;
 };
 
-var CONST_FAV_PROBABILITY = 0.25;
-
 var vtrainer = {
 	oCurrentHanzi: undefined, /** current hanzi */
 	oFavs: {},                /** favorite hanzi */
@@ -28,6 +26,13 @@ var vtrainer = {
 	bDoneSettingUpLoaders: false,
 	fInitializeCallback: undefined,
 	nToLoadFiles: 0,   /** XML loading is based on events, so we can easily end up with some parallel functions waiting for FS while our program is allready at the point where it could try to get the next element. We have to wait until all loaders finish. */
+
+	FAV_PROBABILITY: 0.25,
+	SETTINGS: {
+		TTS: "sAudioURL",
+		MODE: "sMode",
+		FONTSIZE: "dFontSize"
+	},
 
 	oSettings: {},
 
@@ -148,13 +153,12 @@ var vtrainer = {
 	 * @param sFileURL URL of a file, from which the data should be loaded
 	 */
 	loadDataFromURL: function(sKey, sFileURL) {
-		window.requestFileSystem(LocalFileSystem.PERSISTENT, 0, function(fileSystem) {
+		vtrainer.getDir(function(appDir) {
 			// get cache/data dir of our application directory
 			// this has to be requested separately because this function failed to create "cache/data"
-			// TODO: after updating phonegap to 3.7.0 the filehandling seems to have changed
-			fileSystem.root.getDirectory("cache", {create: true, exclusive: false}, function(dir) {
-				dir.getDirectory("data", {create: true, exclusive: false}, function(subdir) {
-					var sCachedFilePath = subdir.nativeURL + sFileURL.hashCode() + ".xml";
+			appDir.getDirectory("cache", {create: true, exclusive: false}, function(cacheDir) {
+				cacheDir.getDirectory("data", {create: true, exclusive: false}, function(dataDir) {
+					var sCachedFilePath = dataDir.nativeURL + sFileURL.hashCode() + ".xml";
 
 					console.log("███ loading file from url: " + sFileURL + "\n -> checking if cached ("+sCachedFilePath+")");
 					// check if file is cached and open it, if not, download it
@@ -178,7 +182,7 @@ var vtrainer = {
 					});
 				}, function(e){vtrainer.onFail(e, "getDirectory(\"cache/data\") in loadDataFromURL(\"" + sFileURL + "\") failed")});
 			}, function(e){vtrainer.onFail(e, "getDirectory(\"cache\") in loadDataFromURL(\"" + sFileURL + "\") failed")});
-		}, function(e){vtrainer.onFail(e, "requestFileSystem in loadDataFromURL(\"" + sFileURL + "\") failed")});
+		});
 	},
 
 	loadDataFromLocalFS: function(sKey, sFileURL) {
@@ -261,7 +265,7 @@ var vtrainer = {
 		} else {
 			do {
 				// TODO correct random probability
-				if ((favsArray.length > 0) && (Math.floor(Math.random() / CONST_FAV_PROBABILITY) < 1)) {
+				if ((favsArray.length > 0) && (Math.floor(Math.random() / this.FAV_PROBABILITY) < 1)) {
 					// if there are favorites and we got a corresponding random or when all data are favorites
 					// get a random favorite
 					var randomIndex = Math.floor(Math.random() * favsArray.length);
@@ -303,15 +307,15 @@ var vtrainer = {
 	playAudio: function() {
 		var hanzi = this.oCurrentHanzi.vocable;
 		if (!this.aAudioBuffer[hanzi]) {
-			if (this.getTTSServerURL()) {
+			if (this.getSetting(vtrainer.SETTINGS.TTS)) {
 				// load the audio
 				console.log("███ loading audio...");
-				var url = this.getTTSServerURL() + hanzi;
+				var url = this.getSetting(vtrainer.SETTINGS.TTS) + hanzi;
 
-				window.requestFileSystem(LocalFileSystem.PERSISTENT, 0, function(fileSystem) {
-					fileSystem.root.getDirectory("cache", {create: true, exclusive: false}, function(dir) {
-						dir.getDirectory("audio", {create: true, exclusive: false}, function(subdir) {
-							var sCachedFilePath = subdir.nativeURL + hanzi + ".mp3";
+				vtrainer.getDir(function(appDir) {
+					appDir.getDirectory("cache", {create: true, exclusive: false}, function(cacheDir) {
+						cacheDir.getDirectory("audio", {create: true, exclusive: false}, function(dataDir) {
+							var sCachedFilePath = dataDir.nativeURL + hanzi + ".mp3";
 							vtrainer.downloadFile(url, sCachedFilePath, function (url, out) {
 								// audio loaded, cache and play it
 								audio = new Media(sCachedFilePath);
@@ -325,7 +329,7 @@ var vtrainer = {
 							});
 						}, function(e){vtrainer.onFail(e, "getDirectory(\"cache/audio\") in playAudio(\"" + hanzi + "\") failed")});
 					}, function(e){vtrainer.onFail(e, "getDirectory(\"cache\") in playAudio(\"" + hanzi + "\") failed")});
-				}, function(e){vtrainer.onFail(e, "requestFileSystem in playAudio(\"" + hanzi + "\") failed")});
+				});
 			} else {
 				alert("You need a working TTS-URL for this feature.");
 			}
@@ -378,13 +382,14 @@ var vtrainer = {
 			},
 			sAudioURL: "",
 			sMode: "to_trans",
+			dFontSize: 1.0,
 			nMinNextSteps: 5, // TODO
 			nMaxNextSteps: 10, // TODO
 			nVersion: version // change this to force an update/reinitialization of settings
 		}
 		// if a settings file is present, load it and overwrite values
-		window.requestFileSystem(LocalFileSystem.PERSISTENT, 0, function(fileSystem) {
-			fileSystem.root.getFile("settings.json", null, function(fileEntry) {
+		vtrainer.getDir(function(appDir) {
+			appDir.getFile("settings.json", null, function(fileEntry) {
 				fileEntry.file(function(file) {
 					var reader = new FileReader();
 					reader.onloadend = function(evt) {
@@ -412,13 +417,14 @@ var vtrainer = {
 				// settings file probably not found
 				onSuccess();
 			});
-		}, function(e){vtrainer.onFail(e, "requestFileSystem in loadSettings() failed")});
+		});
 	},
 	// fail function which displays an alert
 	onFail: function(error, msg) {
 		var msg = msg ? msg : "Error:";
 		// TODO: do this only if debug or if msg undefined
-		msg += "\n\n" + JSON.stringify(error, null, "  ");
+		if (error != null)
+			msg += "\n\n" + JSON.stringify(error, null, "  ");
 
 		if (navigator.notification)
 			navigator.notification.alert(msg, null, Error, 'OK');
@@ -428,9 +434,11 @@ var vtrainer = {
 
 	// ███████████████ getter/setter ██████████████████████████████████████████████████████████████████████
 	getDir: function(onSuccess) {
-		// TODO: get main directory -> data/org.chitra or sdcard/org.chitra?
-		// TODO: replace all calls to getRootDir
-		return null;
+		window.requestFileSystem(LocalFileSystem.PERSISTENT, 0, function(fileSystem) {
+			fileSystem.root.getDirectory("ChiTra", {create: true, exclusive: false}, function(appDir) {
+				onSuccess(appDir);
+			}, function(e){vtrainer.onFail(e, "getDirectory failed")});
+		}, function(e){vtrainer.onFail(e, "requestFileSystem failed")});
 	},
 	// vocable related
 	getCurrentPronunciation: function() {
@@ -455,18 +463,11 @@ var vtrainer = {
 		return this.oFavs;
 	},
 	// settings related
-	getTTSServerURL: function() {
-		return this.oSettings.sAudioURL;
+	getSetting: function(key) {
+		return this.oSettings[key];
 	},
-	setTTSServerURL: function(sURL) {
-		this.oSettings.sAudioURL = sURL;
-		this.saveSettings();
-	},
-	getMode: function() {
-		return this.oSettings.sMode;
-	},
-	setMode: function(sMode) {
-		this.oSettings.sMode = sMode;
+	setSetting: function(key, value) {
+		this.oSettings[key] = value;
 		this.saveSettings();
 	},
 	getFileSelections: function() {

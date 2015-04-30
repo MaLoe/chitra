@@ -8,7 +8,7 @@
 	<meta name="format-detection" content="telephone=no" />
 	<!-- WARNING: for iOS 7, remove the width=device-width and height=device-height attributes. See https://issues.apache.org/jira/browse/CB-4323 -->
 	<meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height, target-densitydpi=medium-dpi" />
-	<link rel="stylesheet" type="text/css" href="css/settings.css" />
+	<link rel="stylesheet" type="text/css" href="css/main.css" />
 	<title>ChiTra Settings</title>
 
 	<link rel="stylesheet" href="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.css" />
@@ -24,13 +24,11 @@
 	<div data-role="panel" id="panel_menu" data-position="left" data-display="overlay" data-theme="a">
 		<a href="index.html" data-ajax="false" class="ui-btn ui-corner-all">Trainer</a>
 		<a href="settings.html" data-ajax="false" class="ui-btn ui-corner-all">Settings</a>
-		<a href="info.html" data-ajax="false" class="ui-btn ui-corner-all">Info</a>
-		<!-- TODO: about -->
+		<a href="info.html" data-ajax="false" class="ui-btn ui-corner-all">Vocable Info</a>
+		<a href="about.html" data-ajax="false" class="ui-btn ui-corner-all">About</a>
 	</div>
 
 	<div data-role="page" id="mainpage">
-		<!--TODOfont size: <select name="select_font" size="1">
-		</select>-->
 		<div data-role="header">
 			<a href="#panel_menu">三</a>
 			<h1>Settings</h1>
@@ -38,20 +36,35 @@
 
 		<div role="main">
 			<br>
-				mode: <select id="select_mode" size="1" onchange="vtrainer.setMode(this.options[this.selectedIndex].value);">
+				font size: <select id="select_font" size="1" onchange="
+							vtrainer.setSetting(vtrainer.SETTINGS.FONTSIZE, this.options[this.selectedIndex].value);
+							$(document.body).css({'font-size': 100 * $(this).val() + '%'});
+						">
+					<option selected disabled hidden value=""></option>
+					<option value="0.25">25%</option>
+					<option value="0.5">50%</option>
+					<option value="0.75">75%</option>
+					<option value="1">100%</option>
+					<option value="1.25">125%</option>
+					<option value="1.5">150%</option>
+					<option value="2">200%</option>
+				</select>
+				mode: <select id="select_mode" size="1" onchange="
+							vtrainer.setSetting(vtrainer.SETTINGS.MODE, this.options[this.selectedIndex].value);
+						">
+					<option selected disabled hidden value=""></option>
 					<option value="to_trans">from vocable</option>
 					<option value="to_vocable">from translation</option>
 					<option value="audio">audio</option>
 				</select>
 			<br>
-				TTS server: <input id="tts_server" type="text" value="" onchange="vtrainer.setTTSServerURL(this.value);">
+				TTS server: <input id="tts_server" type="text" value="" onchange="vtrainer.setSetting(vtrainer.SETTINGS.MODE, this.value);">
 			<br>
 
 			<!-- TODO: <label><input type="checkbox" value="check_input" />input required</label>-->
 			<table>
 				<tr>
-					<!-- TODO: reset data should have a page with checkboxes -> cache, settings etc. -->
-					<td><input type="button" value="reset data" onclick="resetData();"></td>
+					<td><input type="button" value="manage data" onclick="window.open('#page_manage_data','_self');"></td>
 					<td><input type="button" value="add file" onclick="window.open('#page_add_file','_self');"></td>
 				</tr>
 			</table>
@@ -93,9 +106,23 @@
 			<input type="text" id="ef_name" name="name" value="">
 			<label for="ef_url">URL: </label>
 			<input type="text" id="ef_url" name="url" value="">
-			<input type="button" value="Save" onclick="">
-			<input type="button" value="Delete" onclick="">
+			<input type="button" value="Save" onclick="vtrainer.onFail(null, 'TODO');">
+			<input type="button" value="Delete" onclick="vtrainer.onFail(null, 'TODO');">
 			<input type="button" value="Cancel" onclick="window.open('#mainpage','_self');">
+		</div>
+	</div>
+
+	<div data-role="page" id="page_manage_data">
+		<div data-role="header">
+			<a href="#panel_menu">三</a>
+			<h1>Manage data</h1>
+		</div>
+
+		<div role="main">
+			<input type="button" value="clear cache" onclick="vtrainer.onFail(null, 'TODO');">
+			<input type="button" value="fill cache" onclick="vtrainer.onFail(null, 'TODO');">
+			<input type="button" value="reset settings" onclick="vtrainer.onFail(null, 'TODO');">
+			<input type="button" value="import settings" onclick="vtrainer.onFail(null, 'TODO');">
 		</div>
 	</div>
 </body>

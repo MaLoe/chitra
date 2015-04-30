@@ -11,15 +11,21 @@ function onDeviceReady () {
 	document.addEventListener("menubutton", onMenuKeyDown, false);
 	// Initialize vocable trainer
 	vtrainer.initialize(function () {
-		document.getElementById("select_mode").value = vtrainer.getMode();
-		document.getElementById("tts_server").value = vtrainer.getTTSServerURL();
+		$("#select_mode").val(vtrainer.getSetting(vtrainer.SETTINGS.MODE));
+		$("#select_mode").selectmenu("refresh");
+		$("#select_font").val(vtrainer.getSetting(vtrainer.SETTINGS.FONTSIZE));
+		$("#select_font").selectmenu("refresh");
+		$("#tts_server").val(vtrainer.getSetting(vtrainer.SETTINGS.TTS));
+		// set font size
+		$(document.body).css({'font-size': 100 * vtrainer.getSetting(vtrainer.SETTINGS.FONTSIZE) + '%'});
+		// fill table containing checked files
 		fillTable();
 	});
 }
 
 function fillTable(entries) {
-	window.requestFileSystem(LocalFileSystem.PERSISTENT, 0, function(fileSystem) {
-		fileSystem.root.getDirectory("vocabulary", {create: true, exclusive: false}, function(directoryEntry) {
+	vtrainer.getDir(function(appDir) {
+		appDir.getDirectory("vocabulary", {create: true, exclusive: false}, function(directoryEntry) {
 			var directoryReader = directoryEntry.createReader();
 			// Get a list of all the entries in the directory
 			directoryReader.readEntries(function(entries) {
@@ -73,7 +79,7 @@ function fillTable(entries) {
 				$(chckblist).trigger("create");
 			}, onFail);
 		}, onFail);
-	}, onFail);
+	});
 }
 
 function showEdit(event) {
@@ -93,11 +99,11 @@ function resetData() {
 	localStorage.removeItem("data");
 	localStorage.removeItem("favs");
 	// clear cache
-	window.requestFileSystem(LocalFileSystem.PERSISTENT, 0, function(fileSystem) {
-		fileSystem.root.getDirectory("cache", {create: false, exclusive: false}, function(directoryEntry) {
+	vtrainer.getDir(function(appDir) {
+		appDir.getDirectory("cache", {create: false, exclusive: false}, function(directoryEntry) {
 			directoryEntry.removeRecursively(function(){}, onFail);
 		}, onFail);
-	}, onFail);
+	});
 	// reload vtrainer
 	location.reload();
 }

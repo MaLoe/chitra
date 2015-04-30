@@ -12,6 +12,8 @@ function onDeviceReady () {
 	document.addEventListener("menubutton", onMenuKeyDown, false);
 	// Initialize vocable trainer
 	vtrainer.initialize(function () {
+		// set font size
+		$(document.body).css({'font-size': 100 * vtrainer.getSetting(vtrainer.SETTINGS.FONTSIZE) + '%'});
 		// Display the loaded vocabulary
 		displayLoadedVocabulary("t_loaded_elements");
 		displaySettings("t_current_settings");
@@ -30,8 +32,7 @@ function displayLoadedVocabulary (id) {
 			// create header row for file
 			// TODO: make a folding based on header rows
 			var tr_file = document.createElement("tr");
-			tr_file.style.backgroundColor = "#ffffff";
-			tr_file.style.color = "#000000";
+			tr_file.className = "ui-li-divider";
 			var td_file = document.createElement("td");
 			td_file.appendChild(document.createTextNode(sFileKey));
 			td_file.colSpan = 7;
@@ -76,13 +77,15 @@ function displayLoadedVocabulary (id) {
 		}
 	}
 	tableref.appendChild(tbdy);
+	$(tableref).trigger("create");
 }
 
 function displaySettings (id) {
 	oContent = {
 		files: JSON.stringify(vtrainer.getFileSelections(), null, "  "),
-		TTS: vtrainer.getTTSServerURL(),
-		mode: vtrainer.getMode()
+		TTS: vtrainer.getSetting(vtrainer.SETTINGS.TTS),
+		mode: vtrainer.getSetting(vtrainer.SETTINGS.MODE),
+		fontsize: vtrainer.getSetting(vtrainer.SETTINGS.FONTSIZE)
 	};
 
 	var tableref = document.getElementById(id);

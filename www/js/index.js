@@ -12,6 +12,9 @@ function onDeviceReady () {
 	document.addEventListener("menubutton", onMenuKeyDown, false);
 	// Initialize vocable trainer
 	vtrainer.initialize(function () {
+		// set font size
+		$(document.body).css({'font-size': 100 * vtrainer.getSetting(vtrainer.SETTINGS.FONTSIZE) + '%'});
+		// enable next button after vtrainer initialized
 		document.getElementById("next_b").disabled = false;
 	});
 }
@@ -64,7 +67,7 @@ function next () {
 	document.getElementById("content_comment").innerHTML = vtrainer.getCurrentComment();
 	// show stuff according to current mode
 	// TODO: is it possible to use vtrainer.CONST?
-	switch(vtrainer.getMode()) {
+	switch(vtrainer.getSetting(vtrainer.SETTINGS.MODE)) {
 		case "to_vocable":
 			document.getElementById("content_translation").style.visibility = "visible";
 			document.getElementById("content_comment").style.visibility = "visible";

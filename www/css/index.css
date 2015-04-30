@@ -2,22 +2,6 @@
  * License TODO
  * */
 
-html, body {
-	height:100%;
-}
-
-body {
-	-webkit-touch-callout: none;                /* prevent callout to copy image, etc when tap to hold */
-	-webkit-text-size-adjust: none;             /* prevent webkit from resizing text to fit */
-	-webkit-user-select: none;                  /* prevent copy paste, to allow, change 'none' to 'text' */
-
-	position:absolute;
-	margin:0px;
-	padding:0px;
-	height:100%;
-	width:100%;
-}
-
 /* general content styling */
 
 .highlited_textarea {
