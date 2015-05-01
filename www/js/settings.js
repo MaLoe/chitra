@@ -12,14 +12,16 @@ function onDeviceReady () {
 	// Initialize vocable trainer
 	vtrainer.initialize(function () {
 		$("#select_mode").val(vtrainer.getSetting(vtrainer.SETTINGS.MODE));
-		$("#select_mode").selectmenu("refresh");
+		// uncomment this if this page is the first shown $("#select_mode").selectmenu("refresh");
 		$("#select_font").val(vtrainer.getSetting(vtrainer.SETTINGS.FONTSIZE));
-		$("#select_font").selectmenu("refresh");
+		// uncomment this if this page is the first shown $("#select_font").selectmenu("refresh");
 		$("#tts_server").val(vtrainer.getSetting(vtrainer.SETTINGS.TTS));
 		// set font size
 		$(document.body).css({'font-size': 100 * vtrainer.getSetting(vtrainer.SETTINGS.FONTSIZE) + '%'});
 		// fill table containing checked files
 		fillTable();
+		// show page (hide the loading screen)
+		window.open('#page_main_settings','_self');
 	});
 }
 
@@ -77,8 +79,8 @@ function fillTable(entries) {
 				// replace div's html and trigger jquery styling
 				$("#divDataFiles").html(chckblist);
 				$(chckblist).trigger("create");
-			}, onFail);
-		}, onFail);
+			}, vtrainer.onFail);
+		}, vtrainer.onFail);
 	});
 }
 
@@ -101,8 +103,8 @@ function resetData() {
 	// clear cache
 	vtrainer.getDir(function(appDir) {
 		appDir.getDirectory("cache", {create: false, exclusive: false}, function(directoryEntry) {
-			directoryEntry.removeRecursively(function(){}, onFail);
-		}, onFail);
+			directoryEntry.removeRecursively(function(){}, vtrainer.onFail);
+		}, vtrainer.onFail);
 	});
 	// reload vtrainer
 	location.reload();
@@ -111,25 +113,4 @@ function resetData() {
 // open panel on menu key
 function onMenuKeyDown () {
 	$("#panel_menu").panel("toggle");
-}
-
-function onFail(error, msg) {
-	if (!msg)
-		msg = "Error" + JSON.stringify(error);
-	msg = "█!█ " + msg;
-
-	if (navigator.notification)
-		navigator.notification.alert(msg, null, Error, 'OK');
-	else
-		alert(msg);
-	/*console.log("███ fail :(");
-	//alert("Failed while reading data files: " + error.code);
-	var tableref = document.getElementById("tDataFiles");
-	var tbdy = document.createElement("tbody");
-	var tr = document.createElement("tr");
-	var td = document.createElement("td");
-	td.appendChild(document.createTextNode("Failed while reading data files: " + error.code));
-	tr.appendChild(td);
-	tbdy.appendChild(tr);
-	tableref.appendChild(tbdy);*/
 }

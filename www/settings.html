@@ -29,6 +29,12 @@
 	</div>
 
 	<div data-role="page" id="mainpage">
+		<div class="ui-loader ui-corner-all ui-body-a ui-loader-default" style="display:block;">
+			<span class="ui-icon-loading"></span>
+		</div>
+	</div>
+
+	<div data-role="page" id="page_main_settings">
 		<div data-role="header">
 			<a href="#panel_menu">三</a>
 			<h1>Settings</h1>
@@ -70,7 +76,6 @@
 			</table>
 
 			<hr>
-			<!-- TODO: display a loading screen while the table is loading (or not?)-->
 			<div id="divDataFiles"></div>
 		</div>
 	</div>
@@ -89,7 +94,7 @@
 				<label for="af_url">URL: </label>
 				<input type="text" id="af_url" name="url" value="">
 				<input type="submit" value="Add">
-				<input type="button" value="Cancel" onclick="window.open('#mainpage','_self');">
+				<input type="button" value="Cancel" onclick="window.open('#page_main_settings','_self');">
 			</form>
 		</div>
 	</div>
@@ -101,14 +106,13 @@
 		</div>
 
 		<div role="main">
-			<!-- TODO -->
 			<label for="ef_name">name: </label>
 			<input type="text" id="ef_name" name="name" value="">
 			<label for="ef_url">URL: </label>
 			<input type="text" id="ef_url" name="url" value="">
 			<input type="button" value="Save" onclick="vtrainer.onFail(null, 'TODO');">
 			<input type="button" value="Delete" onclick="vtrainer.onFail(null, 'TODO');">
-			<input type="button" value="Cancel" onclick="window.open('#mainpage','_self');">
+			<input type="button" value="Cancel" onclick="window.open('#page_main_settings','_self');">
 		</div>
 	</div>
 
@@ -120,7 +124,7 @@
 
 		<div role="main">
 			<input type="button" value="clear cache" onclick="vtrainer.onFail(null, 'TODO');">
-			<input type="button" value="fill cache" onclick="vtrainer.onFail(null, 'TODO');">
+			<input type="button" value="fill/update cache" onclick="vtrainer.onFail(null, 'TODO');">
 			<input type="button" value="reset settings" onclick="vtrainer.onFail(null, 'TODO');">
 			<input type="button" value="import settings" onclick="vtrainer.onFail(null, 'TODO');">
 		</div>

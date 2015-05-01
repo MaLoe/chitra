@@ -17,6 +17,8 @@ function onDeviceReady () {
 		// Display the loaded vocabulary
 		displayLoadedVocabulary("t_loaded_elements");
 		displaySettings("t_current_settings");
+		// show page (hide the loading screen)
+		window.open('#page_main_info','_self');
 	});
 }
 

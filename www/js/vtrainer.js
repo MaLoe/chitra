@@ -1,8 +1,6 @@
 /*
  * License TODO
  */
-// TODO reset favs before first next or ensure that greeting isn't favorable or remove greeting
-// console.log("███" + JSON.stringify(dir,null,4)); -> indented output of an object - console.dir doesn't work nice in adb
 
 /*
  * hash function from StackOverflow by Jesse Shieh
@@ -32,6 +30,11 @@ var vtrainer = {
 		TTS: "sAudioURL",
 		MODE: "sMode",
 		FONTSIZE: "dFontSize"
+	},
+	MODES: {
+		VOCABLE: "to_trans",
+		TRANSLATION: "to_vocable",
+		AUDIO: "audio"
 	},
 
 	oSettings: {},
@@ -381,7 +384,7 @@ var vtrainer = {
 				// TODO: radicals
 			},
 			sAudioURL: "",
-			sMode: "to_trans",
+			sMode: this.MODES.VOCABLE,
 			dFontSize: 1.0,
 			nMinNextSteps: 5, // TODO
 			nMaxNextSteps: 10, // TODO

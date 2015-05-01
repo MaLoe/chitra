@@ -16,6 +16,8 @@ function onDeviceReady () {
 		$(document.body).css({'font-size': 100 * vtrainer.getSetting(vtrainer.SETTINGS.FONTSIZE) + '%'});
 		// enable next button after vtrainer initialized
 		document.getElementById("next_b").disabled = false;
+		// show page (hide the loading screen)
+		window.open('#page_trainer','_self');
 	});
 }
 
@@ -66,13 +68,12 @@ function next () {
 	document.getElementById("content_translation").innerHTML = vtrainer.getCurrentTranslation();
 	document.getElementById("content_comment").innerHTML = vtrainer.getCurrentComment();
 	// show stuff according to current mode
-	// TODO: is it possible to use vtrainer.CONST?
 	switch(vtrainer.getSetting(vtrainer.SETTINGS.MODE)) {
-		case "to_vocable":
+		case vtrainer.MODES.TRANSLATION:
 			document.getElementById("content_translation").style.visibility = "visible";
 			document.getElementById("content_comment").style.visibility = "visible";
 			break;
-		case "audio":
+		case vtrainer.MODES.AUDIO:
 			vtrainer.playAudio();
 			break;
 		default:
@@ -87,13 +88,4 @@ function playAudio () {
 // open panel on menu key
 function onMenuKeyDown () {
 	$("#panel_menu").panel("toggle");
-}
-
-// fail function which displaces an alert
-function onFail (error) {
-	if (navigator.notification) {
-		navigator.notification.alert("Fail: " + error.code, null, Error, 'OK');
-	} else {
-		alert("Fail: " + error.code);
-	}
 }
