@@ -390,37 +390,7 @@ var vtrainer = {
 			nMaxNextSteps: 10, // TODO
 			nVersion: version // change this to force an update/reinitialization of settings
 		}
-		// if a settings file is present, load it and overwrite values
-		vtrainer.getDir(function(appDir) {
-			appDir.getFile("settings.json", null, function(fileEntry) {
-				fileEntry.file(function(file) {
-					var reader = new FileReader();
-					reader.onloadend = function(evt) {
-						console.log("███ overwriting settings by file");
-						try {
-							var overwrites = JSON.parse(evt.target.result);
-							// overwrite settings
-							for (var setting in overwrites) {
-								if (overwrites.hasOwnProperty(setting)) {
-									vtrainer.oSettings[setting] = overwrites[setting];
-								}
-							}
-						} catch (e) {
-							vtrainer.onFail("couldn't parse settings file\n" + e);
-						}
-						onSuccess();
-					};
-					reader.onerror = function(e){
-						// settings file probably not found, let's continue with our standard settings
-						onSuccess();
-					};
-					reader.readAsText(file);
-				});
-			}, function(e){
-				// settings file probably not found
-				onSuccess();
-			});
-		});
+		onSuccess();
 	},
 	// fail function which displays an alert
 	onFail: function(error, msg) {
@@ -465,7 +435,65 @@ var vtrainer = {
 	getFavorites: function() {
 		return this.oFavs;
 	},
+	// cache related
+	clearCache: function() {
+		vtrainer.getDir(function(appDir) {
+			appDir.getDirectory("cache", {create: false, exclusive: false}, function(directoryEntry) {
+				directoryEntry.removeRecursively(function(){}, vtrainer.onFail);
+			}, vtrainer.onFail);
+		});
+	},
+	fillCache: function() {
+		vtrainer.onFail(null, "TODO");
+	},
 	// settings related
+	importSettings: function(sURL) {
+		console.log("███ importing settings from: " + sURL);
+		// TODO
+		// if a settings file is present, load it and overwrite values
+		vtrainer.getDir(function(appDir) {
+			appDir.getFile("settings.json", null, function(fileEntry) {
+				fileEntry.file(function(file) {
+					var reader = new FileReader();
+					reader.onloadend = function(evt) {
+						console.log("███ overwriting settings by file");
+						try {
+							var overwrites = JSON.parse(evt.target.result);
+							// overwrite settings
+							for (var setting in overwrites) {
+								if (overwrites.hasOwnProperty(setting)) {
+									vtrainer.oSettings[setting] = overwrites[setting];
+								}
+							}
+							vtrainer.saveSettings();
+						} catch (e) {
+							vtrainer.onFail("couldn't parse settings file\n" + e);
+						}
+					};
+					reader.onerror = function(e){
+						// settings file probably not found, let's continue with our standard settings
+						// TODO: remove this
+						vtrainer.getDir(function(appDir) {
+							vtrainer.onFail(null, "file " + appDir.nativeURL + sURL + " not found");
+						});
+					};
+					reader.readAsText(file);
+				});
+			}, function(e){
+				// settings file probably not found
+				// TODO: remove this
+				vtrainer.getDir(function(appDir) {
+					vtrainer.onFail(null, "file " + appDir.nativeURL + sURL + " not found");
+				});
+			});
+		});
+	},
+	setDefaultSettings: function() {
+		// TODO
+		localStorage.removeItem("settings");
+		localStorage.removeItem("data");
+		localStorage.removeItem("favs");
+	},
 	getSetting: function(key) {
 		return this.oSettings[key];
 	},

@@ -91,25 +91,6 @@ function showEdit(event) {
 	window.open("#page_edit_file","_self");
 }
 
-function addFile(url, name, checked) {
-	vtrainer.setFile(url, checked, name);
-}
-
-function resetData() {
-	// clear local storage
-	localStorage.removeItem("settings");
-	localStorage.removeItem("data");
-	localStorage.removeItem("favs");
-	// clear cache
-	vtrainer.getDir(function(appDir) {
-		appDir.getDirectory("cache", {create: false, exclusive: false}, function(directoryEntry) {
-			directoryEntry.removeRecursively(function(){}, vtrainer.onFail);
-		}, vtrainer.onFail);
-	});
-	// reload vtrainer
-	location.reload();
-}
-
 // open panel on menu key
 function onMenuKeyDown () {
 	$("#panel_menu").panel("toggle");

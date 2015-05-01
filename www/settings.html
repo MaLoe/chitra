@@ -87,8 +87,12 @@
 		</div>
 
 		<div role="main">
-			<form name="add_file" onsubmit="addFile(this.url.value, this.name.value, false);">
+			<form name="add_file" onsubmit="
+						vtrainer.setFile(this.url.value, this.name.value, false);
+						window.open('#page_main_settings','_self');
+					">
 				<!-- TODO: intermediate page -> url or file and a file dialog -->
+				<!-- TODO: check inputs -->
 				<label for="af_name">name: </label>
 				<input type="text" id="af_name" name="name" value="">
 				<label for="af_url">URL: </label>
@@ -123,10 +127,10 @@
 		</div>
 
 		<div role="main">
-			<input type="button" value="clear cache" onclick="vtrainer.onFail(null, 'TODO');">
-			<input type="button" value="fill/update cache" onclick="vtrainer.onFail(null, 'TODO');">
-			<input type="button" value="reset settings" onclick="vtrainer.onFail(null, 'TODO');">
-			<input type="button" value="import settings" onclick="vtrainer.onFail(null, 'TODO');">
+			<input type="button" value="clear cache" onclick="vtrainer.clearCache();">
+			<input type="button" value="fill/update cache" onclick="vtrainer.fillCache();">
+			<input type="button" value="reset settings" onclick="vtrainer.setDefaultSettings();">
+			<input type="button" value="import settings" onclick="vtrainer.importSettings('settings.json');">
 		</div>
 	</div>
 </body>
