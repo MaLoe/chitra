@@ -484,8 +484,9 @@ var vtrainer = {
 								}
 							}
 							vtrainer.saveSettings();
+							vtrainer.onFail(null, "Imported settings correctly.");
 						} catch (e) {
-							vtrainer.onFail("couldn't parse settings file\n" + e);
+							vtrainer.onFail(e, "couldn't parse settings file");
 						}
 					};
 					reader.onerror = function(e){
