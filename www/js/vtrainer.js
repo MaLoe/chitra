@@ -132,20 +132,24 @@ var vtrainer = {
 				else
 					var temp_comment = xmlElementComment[0].childNodes[0].nodeValue;
 
-				var element = {
-					vocable       : xmlEntries[i].getElementsByTagName("vocable")[0].childNodes[0].nodeValue,
-					pronunciation : xmlEntries[i].getElementsByTagName("pronunciation")[0].childNodes[0].nodeValue,
-					translation   : xmlEntries[i].getElementsByTagName("translation")[0].childNodes[0].nodeValue,
-					comment       : temp_comment,
-					occurrences   : 0,
-					shown         : 0,
-					favorite      : false
+				try {
+					var element = {
+						vocable       : xmlEntries[i].getElementsByTagName("vocable")[0].childNodes[0].nodeValue,
+						pronunciation : xmlEntries[i].getElementsByTagName("pronunciation")[0].childNodes[0].nodeValue,
+						translation   : xmlEntries[i].getElementsByTagName("translation")[0].childNodes[0].nodeValue,
+						comment       : temp_comment,
+						occurrences   : 0,
+						shown         : 0,
+						favorite      : false
+					}
+					aVocabulary.push(element);
+				} catch (e) {
+					vtrainer.onFail(e, "Couldn't parse entry #" + i + " in XML '" + sKey + "', failed while reading vocable, pronunciation and translation.");
 				}
-				aVocabulary.push(element);
 			}
 			console.log("███ parsed XML, entries: " + xmlEntries.length);
 		} catch (e) {
-			vtrainer.onFail("couldn't parse XML \"" + sKey + "\":\n" + e);
+			vtrainer.onFail(e, "Couldn't parse XML '" + sKey + "', failed while getting root.children(entry).");
 		}
 		this.oData[sKey] = aVocabulary;
 	},
@@ -156,9 +160,9 @@ var vtrainer = {
 	 * @param sFileURL URL of a file, from which the data should be loaded
 	 */
 	loadDataFromURL: function(sKey, sFileURL) {
-		vtrainer.getDir("cache/data", function(dataDir) {
+		vtrainer.getDir(null, function(appDir) {
 			// get cache/data dir of our application directory
-			var sCachedFilePath = dataDir.nativeURL + sFileURL.hashCode() + ".xml";
+			var sCachedFilePath = appDir.nativeURL + vtrainer.getCachedURL(sFileURL);
 
 			console.log("███ loading file from url: " + sFileURL + "\n -> checking if cached ("+sCachedFilePath+")");
 			// check if file is cached and open it, if not, download it
@@ -455,9 +459,25 @@ var vtrainer = {
 		return this.oFavs;
 	},
 	// cache related
+	getCachedURL: function(sURL) {
+		return sCachedFilePath = "cache/data/" + sURL.hashCode() + ".xml";
+	},
 	clearCache: function() {
 		vtrainer.getDir("cache", function(cacheDir) {
 			cacheDir.removeRecursively(function(){}, vtrainer.onFail);
+		});
+	},
+	cacheFile: function(sURL) {
+		vtrainer.getDir(null, function(appDir) {
+			var sCachedFilePath = appDir.nativeURL + vtrainer.getCachedURL(sURL);
+			vtrainer.downloadFile(sURL, sCachedFilePath, function (url, out) {
+				vtrainer.onFail(null, "File cached/reloaded.");
+			}, function (e) {
+				vtrainer.onFail(
+					e, "couldn't cache \"" + e.source + "\":\nerror code: " + e.code
+					+ "\nhttp status: " + e.http_status
+				);
+			});
 		});
 	},
 	fillCache: function() {
