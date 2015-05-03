@@ -33,7 +33,7 @@
 			vtrainer.initialize(function () {
 				$(document.body).css({'font-size': 100 * vtrainer.getSetting(vtrainer.SETTINGS.FONTSIZE) + '%'});
 				// display info
-				vtrainer.getDir(function(appDir) {
+				vtrainer.getDir(null, function(appDir) {
 					$("#data-appdir").html(appDir.nativeURL);
 				});
 			});

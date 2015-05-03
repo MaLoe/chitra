@@ -156,35 +156,30 @@ var vtrainer = {
 	 * @param sFileURL URL of a file, from which the data should be loaded
 	 */
 	loadDataFromURL: function(sKey, sFileURL) {
-		vtrainer.getDir(function(appDir) {
+		vtrainer.getDir("cache/data", function(dataDir) {
 			// get cache/data dir of our application directory
-			// this has to be requested separately because this function failed to create "cache/data"
-			appDir.getDirectory("cache", {create: true, exclusive: false}, function(cacheDir) {
-				cacheDir.getDirectory("data", {create: true, exclusive: false}, function(dataDir) {
-					var sCachedFilePath = dataDir.nativeURL + sFileURL.hashCode() + ".xml";
+			var sCachedFilePath = dataDir.nativeURL + sFileURL.hashCode() + ".xml";
 
-					console.log("███ loading file from url: " + sFileURL + "\n -> checking if cached ("+sCachedFilePath+")");
-					// check if file is cached and open it, if not, download it
-					// TODO: delete file if size == 0 or redownload or something
-					window.resolveLocalFileSystemURL(sCachedFilePath, function(fileEntry) {
-						// file is cached
-						console.log("███ is cached, opening");
+			console.log("███ loading file from url: " + sFileURL + "\n -> checking if cached ("+sCachedFilePath+")");
+			// check if file is cached and open it, if not, download it
+			// TODO: delete file if size == 0 or redownload or something
+			window.resolveLocalFileSystemURL(sCachedFilePath, function(fileEntry) {
+				// file is cached
+				console.log("███ is cached, opening");
 
-						vtrainer.loadDataFromLocalFS(sKey, sCachedFilePath);
-					}, function(fail) {
-						// file not found, download it
-						console.log("███ not cached, downloading " + sFileURL + " to " + sCachedFilePath);
-						vtrainer.downloadFile(sFileURL, sCachedFilePath, function (url, out) {
-							vtrainer.loadDataFromLocalFS(sKey, sCachedFilePath);
-						}, function(e){
-							vtrainer.onFail(
-								e, "couldn't download \"" + e.source + "\":\nerror code: " + e.code
-								+ "\nhttp status: " + e.http_status
-							);
-						});
-					});
-				}, function(e){vtrainer.onFail(e, "getDirectory(\"cache/data\") in loadDataFromURL(\"" + sFileURL + "\") failed")});
-			}, function(e){vtrainer.onFail(e, "getDirectory(\"cache\") in loadDataFromURL(\"" + sFileURL + "\") failed")});
+				vtrainer.loadDataFromLocalFS(sKey, sCachedFilePath);
+			}, function(fail) {
+				// file not found, download it
+				console.log("███ not cached, downloading " + sFileURL + " to " + sCachedFilePath);
+				vtrainer.downloadFile(sFileURL, sCachedFilePath, function (url, out) {
+					vtrainer.loadDataFromLocalFS(sKey, sCachedFilePath);
+				}, function(e){
+					vtrainer.onFail(
+						e, "couldn't download \"" + e.source + "\":\nerror code: " + e.code
+						+ "\nhttp status: " + e.http_status
+					);
+				});
+			});
 		});
 	},
 
@@ -310,37 +305,41 @@ var vtrainer = {
 	playAudio: function() {
 		var hanzi = this.oCurrentHanzi.vocable;
 		if (!this.aAudioBuffer[hanzi]) {
-			if (this.getSetting(vtrainer.SETTINGS.TTS)) {
-				// load the audio
-				console.log("███ loading audio...");
-				var url = this.getSetting(vtrainer.SETTINGS.TTS) + hanzi;
-
-				vtrainer.getDir(function(appDir) {
-					appDir.getDirectory("cache", {create: true, exclusive: false}, function(cacheDir) {
-						cacheDir.getDirectory("audio", {create: true, exclusive: false}, function(dataDir) {
-							var sCachedFilePath = dataDir.nativeURL + hanzi + ".mp3";
-							vtrainer.downloadFile(url, sCachedFilePath, function (url, out) {
-								// audio loaded, cache and play it
-								audio = new Media(sCachedFilePath);
-								vtrainer.aAudioBuffer[hanzi] = audio;
-								audio.play();
-							}, function(e){
-								vtrainer.onFail(
-									e, "couldn't download \"" + e.source + "\":\nerror code: " + e.code
-									+ "\nhttp status: " + e.http_status
-								);
-							});
-						}, function(e){vtrainer.onFail(e, "getDirectory(\"cache/audio\") in playAudio(\"" + hanzi + "\") failed")});
-					}, function(e){vtrainer.onFail(e, "getDirectory(\"cache\") in playAudio(\"" + hanzi + "\") failed")});
+			console.log("███ loading audio for: " + hanzi);
+			vtrainer.getDir("cache/audio/", function(audioDir) {
+				var sFileName =  hanzi + ".mp3";
+				var sCachedFilePath = audioDir.nativeURL + sFileName;
+				// try to read from cache first, if not present, load it if TTS set
+				audioDir.getFile(sFileName, {create: false}, function() {
+					// file exists
+					vtrainer.aAudioBuffer[hanzi] = new Media(sCachedFilePath);
+					vtrainer.aAudioBuffer[hanzi].play();
+				}, function() {
+					// file is not cached
+					if (vtrainer.getSetting(vtrainer.SETTINGS.TTS)) {
+						// download audio file
+						var url = vtrainer.getSetting(vtrainer.SETTINGS.TTS) + hanzi;
+						vtrainer.downloadFile(url, sCachedFilePath, function (url, out) {
+							// audio loaded, cache and play it
+							vtrainer.aAudioBuffer[hanzi] = new Media(sCachedFilePath);
+							vtrainer.aAudioBuffer[hanzi].play();
+						}, function(e){
+							vtrainer.onFail(
+								e, "couldn't download \"" + e.source + "\":\nerror code: " + e.code
+								+ "\nhttp status: " + e.http_status
+							);
+						});
+					} else {
+						alert("You need a working TTS-URL for this feature.");
+					}
 				});
-			} else {
-				alert("You need a working TTS-URL for this feature.");
-			}
+			});
 		} else {
 			// play the audio
 			this.aAudioBuffer[hanzi].play();
 		}
 	},
+
 	// download the file from url to outPath
 	downloadFile: function(sURL, sOutPath, onSuccess, onFail) {
 		var fileTransfer = new FileTransfer();
@@ -348,8 +347,7 @@ var vtrainer = {
 			encodeURI(sURL),
 			sOutPath,
 			function(entry) {
-				// TODO entry.fullPath returns something strange
-				console.log("download complete: " + entry.fullPath);
+				console.log("███ download complete: " + entry.fullPath);
 				onSuccess(sURL, sOutPath);
 			},
 			onFail,
@@ -406,11 +404,32 @@ var vtrainer = {
 	},
 
 	// ███████████████ getter/setter ██████████████████████████████████████████████████████████████████████
-	getDir: function(onSuccess) {
+	getDir: function(path, onSuccess) {
+		var fullPath = "ChiTra/";
+		if (path)
+			fullPath +=  path;
+		console.log("███ requesting directory: " + fullPath);
+		// create directories if not present
+		var dirs = fullPath.split("/").reverse();
 		window.requestFileSystem(LocalFileSystem.PERSISTENT, 0, function(fileSystem) {
-			fileSystem.root.getDirectory("ChiTra", {create: true, exclusive: false}, function(appDir) {
-				onSuccess(appDir);
-			}, function(e){vtrainer.onFail(e, "getDirectory failed")});
+			var root = fileSystem.root;
+
+			var createDir = function(dir){
+				root.getDirectory(
+					dir, {create : true, exclusive : false},
+					successCB, function(e) { vtrainer.onFail(e, "failed to create dir " + dir); });
+			};
+
+			var successCB = function(entry){
+				root = entry;
+				if(dirs.length > 0){
+					createDir(dirs.pop());
+				}else{
+					onSuccess(entry);
+				}
+			};
+
+			createDir(dirs.pop());
 		}, function(e){vtrainer.onFail(e, "requestFileSystem failed")});
 	},
 	// vocable related
@@ -437,10 +456,8 @@ var vtrainer = {
 	},
 	// cache related
 	clearCache: function() {
-		vtrainer.getDir(function(appDir) {
-			appDir.getDirectory("cache", {create: false, exclusive: false}, function(directoryEntry) {
-				directoryEntry.removeRecursively(function(){}, vtrainer.onFail);
-			}, vtrainer.onFail);
+		vtrainer.getDir("cache", function(cacheDir) {
+			cacheDir.removeRecursively(function(){}, vtrainer.onFail);
 		});
 	},
 	fillCache: function() {
@@ -449,9 +466,10 @@ var vtrainer = {
 	// settings related
 	importSettings: function(sURL) {
 		console.log("███ importing settings from: " + sURL);
+		// TODO: message/dialog: imported correctly
 		// TODO
 		// if a settings file is present, load it and overwrite values
-		vtrainer.getDir(function(appDir) {
+		vtrainer.getDir(null, function(appDir) {
 			appDir.getFile("settings.json", null, function(fileEntry) {
 				fileEntry.file(function(file) {
 					var reader = new FileReader();
@@ -473,7 +491,7 @@ var vtrainer = {
 					reader.onerror = function(e){
 						// settings file probably not found, let's continue with our standard settings
 						// TODO: remove this
-						vtrainer.getDir(function(appDir) {
+						vtrainer.getDir(null, function(appDir) {
 							vtrainer.onFail(null, "file " + appDir.nativeURL + sURL + " not found");
 						});
 					};
@@ -482,7 +500,7 @@ var vtrainer = {
 			}, function(e){
 				// settings file probably not found
 				// TODO: remove this
-				vtrainer.getDir(function(appDir) {
+				vtrainer.getDir(null, function(appDir) {
 					vtrainer.onFail(null, "file " + appDir.nativeURL + sURL + " not found");
 				});
 			});
