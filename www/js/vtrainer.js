@@ -15,6 +15,12 @@ String.prototype.hashCode = function() {
 	}
 	return hash;
 };
+Object.size = function(obj) {
+	var size = 0, key;
+	for (key in obj)
+		if (obj.hasOwnProperty(key)) size++;
+	return size;
+};
 
 var vtrainer = {
 	oCurrentHanzi: undefined, /** current hanzi */
@@ -25,7 +31,6 @@ var vtrainer = {
 	fInitializeCallback: undefined,
 	nToLoadFiles: 0,   /** XML loading is based on events, so we can easily end up with some parallel functions waiting for FS while our program is allready at the point where it could try to get the next element. We have to wait until all loaders finish. */
 
-	FAV_PROBABILITY: 0.25,
 	SETTINGS: {
 		TTS: "sAudioURL",
 		MODE: "sMode",
@@ -166,7 +171,6 @@ var vtrainer = {
 
 			console.log("███ loading file from url: " + sFileURL + "\n -> checking if cached ("+sCachedFilePath+")");
 			// check if file is cached and open it, if not, download it
-			// TODO: delete file if size == 0 or redownload or something
 			window.resolveLocalFileSystemURL(sCachedFilePath, function(fileEntry) {
 				// file is cached
 				console.log("███ is cached, opening");
@@ -240,8 +244,6 @@ var vtrainer = {
 			// TODO slice
 			checked = false;
 		} else {
-			// TODO: info.html, was das benutzt, hat kein ocurrenthanzi, welches aber in next benutzt wird
-			// TODO: ich sollte entweder in favs nur die hanzi speichern oder kA
 			this.oFavs[vocable] = true;
 			checked = true;
 		}
@@ -249,50 +251,59 @@ var vtrainer = {
 		localStorage.setItem("favs", JSON.stringify(this.oFavs));
 		return checked;
 	},
+	getRandomVocable: function() {
+		var aFiles = Object.keys(vtrainer.oData);
+		var sFileURL = aFiles[Math.floor(Math.random() * aFiles.length)];
+		return vtrainer.oData[sFileURL][Math.floor(Math.random() * vtrainer.oData[sFileURL].length)];
+	},
+	getRandomFavoriteVocable: function() {
+		var favsArray = Object.keys(vtrainer.oFavs);
+		// TODO: there might be favorites, which files are deactivated
+		if (favsArray.length > 0) {
+			// if there are favorites and we got a corresponding random or when all data are favorites
+			// get a random favorite
+			var randomIndex = Math.floor(Math.random() * favsArray.length);
+			// search for the whole vocable
+			for (var sFileURL in vtrainer.oData)
+				if (vtrainer.oData.hasOwnProperty(sFileURL))
+					for (var i = 0; i < vtrainer.oData[sFileURL].length; i++)
+						if (vtrainer.oData[sFileURL][i].vocable == favsArray[randomIndex])
+							return vtrainer.oData[sFileURL][i];
+		}
+		console.log("███ couldn't get a random favorite vocable");
+		return undefined;
+	},
 	// Next Element
 	//
 	// picks a random element either normal or from favorites
 	next: function() {
 		// get a new (different than current) element
 		var tempElement = null;
-		var maxSteps = 100; // this is used to catch anything like only one element or elements with the same id
-		var occSteps = 10;
-		var currentStep = 0;
-		var aFiles = Object.keys(this.oData);
-		var favsArray = Object.keys(this.oFavs);
+		var currentStepNum = 0;
+		var unlike = this.oCurrentHanzi;
 
-		if (!this.oCurrentHanzi) {
-			var sFileURL = aFiles[Math.floor(Math.random() * aFiles.length)];
-			tempElement = this.oData[sFileURL][Math.floor(Math.random() * this.oData[sFileURL].length)];
+		if (!unlike) {
+			tempElement = this.getRandomVocable();
 		} else {
+			// TODO: proper probability
+			if ((Object.size(this.oFavs) > 0) && (Math.floor(Math.random() / this.getSetting("dFavProbability")) < 1))
+				var randomGetterFunc = this.getRandomFavoriteVocable;
+			else
+				var randomGetterFunc = this.getRandomVocable;
 			do {
-				// TODO correct random probability
-				if ((favsArray.length > 0) && (Math.floor(Math.random() / this.FAV_PROBABILITY) < 1)) {
-					// if there are favorites and we got a corresponding random or when all data are favorites
-					// get a random favorite
-					var randomIndex = Math.floor(Math.random() * favsArray.length);
-					// search for the whole vocable
-					var found = undefined;
-					for (var sFileURL in this.oData)
-						if (this.oData.hasOwnProperty(sFileURL))
-							for (var i = 0; i < this.oData[sFileURL].length && !found; i++)
-								if (this.oData[sFileURL][i].vocable == favsArray[randomIndex])
-									found = this.oData[sFileURL][i];
-
-					tempElement = found;
-				} else {
-					var sFileURL = aFiles[Math.floor(Math.random() * aFiles.length)];
-					// get a random element (which also could be a favorite)
-					// (try to get the one with lowest # of occs)
-					for (i = 0; i < occSteps; i++) {
-						var randomIndex = Math.floor(Math.random() * this.oData[sFileURL].length);
-						if (!tempElement || (tempElement.occurrences-tempElement.shown) > (this.oData[sFileURL][randomIndex].occurrences-this.oData[sFileURL][randomIndex].shown))
-							tempElement = this.oData[sFileURL][randomIndex];
-					}
+				// try to get the one with lowest # of occurences
+				for (i = 0; i < this.getSetting("nMinNextSteps"); i++) {
+					randomVoc = randomGetterFunc();
+					if (randomVoc && (!tempElement || (tempElement.occurrences-tempElement.shown) > (randomVoc.occurrences-randomVoc.shown)))
+						tempElement = randomVoc;
 				}
+				if (!tempElement) {
+					// this is a temporary fix while the favGetter is broken TODO: remove this and "(randomVoc &&"
+					tempElement = this.getRandomVocable();
+				}
+				currentStepNum++;
 				// now test if it's the same element as the current displayed
-				currentStep++;
-			} while (this.oCurrentHanzi.vocable == tempElement.vocable && currentStep < maxSteps)
+			} while (unlike.vocable == tempElement.vocable && currentStepNum < this.getSetting("nMaxNextSteps"))
 		}
 		this.oCurrentHanzi = tempElement;
 
@@ -367,7 +378,7 @@ var vtrainer = {
 		console.log("███ saved settings");
 	},
 	loadSettings: function(onSuccess) {
-		var version = 1;
+		var version = 2;
 		// try to load from persistent memory and if nothing's there, initialize it
 		if (localStorage.getItem("settings")) {
 			console.log("███ loading settings");
@@ -388,8 +399,9 @@ var vtrainer = {
 			sAudioURL: "",
 			sMode: this.MODES.VOCABLE,
 			dFontSize: 1.0,
-			nMinNextSteps: 5, // TODO
-			nMaxNextSteps: 10, // TODO
+			dFavProbability: 0.25,
+			nMinNextSteps: 10, // next() - take one element out of a set with this size with the lowest (occurences minus shown)-ratio
+			nMaxNextSteps: 100, // next() - this is used to catch anything like only one element or elements with the same id
 			nVersion: version // change this to force an update/reinitialization of settings
 		}
 		onSuccess();
@@ -510,20 +522,12 @@ var vtrainer = {
 						}
 					};
 					reader.onerror = function(e){
-						// settings file probably not found, let's continue with our standard settings
-						// TODO: remove this
-						vtrainer.getDir(null, function(appDir) {
-							vtrainer.onFail(null, "file " + appDir.nativeURL + sURL + " not found");
-						});
+						vtrainer.onFail(null, "couldn't read " + appDir.nativeURL + "/settings.json");
 					};
 					reader.readAsText(file);
 				});
 			}, function(e){
 				// settings file probably not found
-				// TODO: remove this
-				vtrainer.getDir(null, function(appDir) {
-					vtrainer.onFail(null, "file " + appDir.nativeURL + sURL + " not found");
-				});
 			});
 		});
 	},
